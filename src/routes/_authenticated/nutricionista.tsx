@@ -8,7 +8,6 @@ import {
   Trash2,
   Users,
   UserPlus,
-  LogOut,
   UtensilsCrossed,
   History,
 } from "lucide-react";
