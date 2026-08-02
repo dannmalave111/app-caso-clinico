@@ -196,7 +196,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         const parsed = JSON.parse(raw) as Patient[];
         if (Array.isArray(parsed) && parsed.length) {
           setPatients(parsed);
-          setActivePatientId(parsed[0].id);
+          setActivePatientId(parsed[0]!.id);
           setHydrated(true);
           return;
         }
