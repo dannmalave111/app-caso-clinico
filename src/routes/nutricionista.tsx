@@ -45,7 +45,7 @@ export const Route = createFileRoute("/nutricionista")({
       },
     ],
   }),
-  component: Dashboard;
+  component: Dashboard,
 });
 
 type Tab = "pacientes" | "menu" | "medidas" | "timeline";
