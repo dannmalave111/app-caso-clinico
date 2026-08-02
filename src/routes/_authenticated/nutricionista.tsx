@@ -7,6 +7,8 @@ import {
   Ruler,
   Trash2,
   Users,
+  UserPlus,
+  LogOut,
   UtensilsCrossed,
   History,
 } from "lucide-react";
@@ -28,6 +30,7 @@ import {
   useStore,
   type MealType,
 } from "@/lib/store";
+import { RegistroPacientes } from "@/components/RegistroPacientes";
 
 export const Route = createFileRoute("/_authenticated/nutricionista")({
   head: () => ({
@@ -116,6 +119,7 @@ function Dashboard() {
 
       <main className="mx-auto w-full max-w-7xl px-6 py-8">
         {tab === "pacientes" && <TablaPacientes />}
+        {tab === "registro" && <RegistroPacientes />}
         {tab === "menu" && <EditorMenu />}
         {tab === "medidas" && <Antropometria />}
         {tab === "timeline" && <Timeline />}
