@@ -14,6 +14,7 @@ import { reportLovableError } from "../lib/lovable-error-reporting";
 import { StoreProvider } from "@/lib/store";
 import { AccessibilityProvider } from "@/lib/accessibility";
 import { AccessibilityPanel } from "@/components/AccessibilityPanel";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
