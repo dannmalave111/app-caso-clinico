@@ -205,7 +205,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       /* ignore */
     }
     setPatients((p) => {
-      setActivePatientId(p[0].id);
+      setActivePatientId(p[0]!.id);
       return p;
     });
     setHydrated(true);
