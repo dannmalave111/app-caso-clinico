@@ -300,6 +300,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
           medidas: [...p.medidas, m].sort((a, b) => a.fecha.localeCompare(b.fecha)),
         })),
       setMetaAgua: (patientId, meta) => update(patientId, (p) => ({ ...p, metaAgua: meta })),
+      ensurePatient: (info, activar = true) => {
+        setPatients((prev) =>
+          prev.some((p) => p.id === info.id)
+            ? prev.map((p) => (p.id === info.id ? { ...p, ...info } : p))
+            : [...prev, patientFromSeed(info)],
+        );
+        if (activar) setActivePatientId(info.id);
+      },
     };
   }, [patients, activePatientId, update]);
 
