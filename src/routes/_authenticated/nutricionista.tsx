@@ -29,7 +29,7 @@ import {
   type MealType,
 } from "@/lib/store";
 
-export const Route = createFileRoute("/nutricionista")({
+export const Route = createFileRoute("/_authenticated/nutricionista")({
   head: () => ({
     meta: [
       { title: "Panel del nutricionista — NutriCuida" },

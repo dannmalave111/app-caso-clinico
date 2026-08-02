@@ -13,7 +13,7 @@ import {
 import { PatientShell } from "@/components/PatientShell";
 import { daysAgo, isoDate, useStore } from "@/lib/store";
 
-export const Route = createFileRoute("/paciente/progreso")({
+export const Route = createFileRoute("/_authenticated/paciente/progreso")({
   head: () => ({
     meta: [
       { title: "Mi progreso — NutriCuida" },

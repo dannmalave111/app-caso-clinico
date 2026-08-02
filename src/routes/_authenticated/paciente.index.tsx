@@ -11,7 +11,7 @@ import {
 import { PatientShell } from "@/components/PatientShell";
 import { BRISTOL, MEAL_ORDER, isoDate, useStore } from "@/lib/store";
 
-export const Route = createFileRoute("/paciente/")({
+export const Route = createFileRoute("/_authenticated/paciente/")({
   head: () => ({
     meta: [
       { title: "Mi día — NutriCuida" },
