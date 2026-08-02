@@ -2,29 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-
-export const patientEmail = (codigo: string) => `p${codigo}@nutricuida.app`;
-export const patientPassword = (codigo: string) => `NutriCuida-${codigo}`;
-
-const registroSchema = z.object({
-  nombre: z.string().trim().min(3).max(80),
-  edad: z.number().int().min(1).max(120),
-  telefono: z
-    .string()
-    .trim()
-    .max(20)
-    .regex(/^[0-9+\s-]*$/, "Teléfono inválido"),
-  objetivo: z.string().trim().max(200),
-  metaAgua: z.number().int().min(1).max(20),
-});
-
-async function assertNutricionista(context: { supabase: any; userId: string }) {
-  const { data, error } = await context.supabase.rpc("has_role", {
-    _user_id: context.userId,
-    _role: "nutricionista",
-  });
-  if (error || !data) throw new Error("Solo el nutricionista puede realizar esta acción");
-}
+import { patientEmail, patientPassword, registroSchema } from "@/lib/patients.shared";
+import { assertNutricionista } from "@/lib/patients.server";
 
 /** Marca al usuario recién registrado como nutricionista si aún no tiene rol. */
 export const claimNutricionista = createServerFn({ method: "POST" })
