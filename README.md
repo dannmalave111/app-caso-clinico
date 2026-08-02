@@ -1,4 +1,4 @@
-# APP CASO CLIMICO
+# APP CASO CLINICO
 
 Actúa como un diseñador UI/UX experto en accesibilidad para adultos mayores y un desarrollador Full-Stack. Crea una aplicación web responsiva (optimizada para verse como una app móvil nativa en celulares y una plataforma web en computadoras) con una estética moderna, limpia y minimalista, inspirada en apps de salud de alta gama: fondos claros (blanco/gris sutil), tarjetas flotantes con bordes muy redondeados, sombras suaves, y acentos en verde menta y blanco.
 
