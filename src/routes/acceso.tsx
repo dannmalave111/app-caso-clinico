@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { patientEmail, patientPassword } from "@/lib/patients.functions";
+import { patientEmail, patientPassword } from "@/lib/patients.shared";
 
 const normalizar = (v: string) =>
   v
