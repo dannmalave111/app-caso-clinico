@@ -10,33 +10,63 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as NutricionistaRouteImport } from './routes/nutricionista'
+import { Route as PacienteIndexRouteImport } from './routes/paciente.index'
+import { Route as PacienteProgresoRouteImport } from './routes/paciente.progreso'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NutricionistaRoute = NutricionistaRouteImport.update({
+  id: '/nutricionista',
+  path: '/nutricionista',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PacienteIndexRoute = PacienteIndexRouteImport.update({
+  id: '/paciente/',
+  path: '/paciente/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PacienteProgresoRoute = PacienteProgresoRouteImport.update({
+  id: '/paciente/progreso',
+  path: '/paciente/progreso',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/nutricionista': typeof NutricionistaRoute
+  '/paciente/progreso': typeof PacienteProgresoRoute
+  '/paciente/': typeof PacienteIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/nutricionista': typeof NutricionistaRoute
+  '/paciente/progreso': typeof PacienteProgresoRoute
+  '/paciente': typeof PacienteIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/nutricionista': typeof NutricionistaRoute
+  '/paciente/progreso': typeof PacienteProgresoRoute
+  '/paciente/': typeof PacienteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/nutricionista' | '/paciente/progreso' | '/paciente/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/nutricionista' | '/paciente/progreso' | '/paciente'
+  id: '__root__' | '/' | '/nutricionista' | '/paciente/progreso' | '/paciente/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  NutricionistaRoute: typeof NutricionistaRoute
+  PacienteProgresoRoute: typeof PacienteProgresoRoute
+  PacienteIndexRoute: typeof PacienteIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,22 +78,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/nutricionista': {
+      id: '/nutricionista'
+      path: '/nutricionista'
+      fullPath: '/nutricionista'
+      preLoaderRoute: typeof NutricionistaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/paciente/': {
+      id: '/paciente/'
+      path: '/paciente'
+      fullPath: '/paciente/'
+      preLoaderRoute: typeof PacienteIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/paciente/progreso': {
+      id: '/paciente/progreso'
+      path: '/paciente/progreso'
+      fullPath: '/paciente/progreso'
+      preLoaderRoute: typeof PacienteProgresoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  NutricionistaRoute: NutricionistaRoute,
+  PacienteProgresoRoute: PacienteProgresoRoute,
+  PacienteIndexRoute: PacienteIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
