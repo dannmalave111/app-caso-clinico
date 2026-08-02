@@ -166,6 +166,29 @@ function seedPatients(): Patient[] {
   ];
 }
 
+export type PatientSeed = {
+  id: string;
+  nombre: string;
+  edad: number;
+  telefono: string;
+  objetivo: string;
+  metaAgua: number;
+};
+
+function patientFromSeed(info: PatientSeed): Patient {
+  return {
+    id: info.id,
+    nombre: info.nombre,
+    edad: info.edad,
+    telefono: info.telefono,
+    objetivo: info.objetivo,
+    metaAgua: info.metaAgua,
+    plan: planBase(),
+    logs: {},
+    medidas: [],
+  };
+}
+
 type Store = {
   patients: Patient[];
   activePatientId: string;
@@ -179,6 +202,7 @@ type Store = {
   removeBlock: (patientId: string, day: string, blockId: string) => void;
   addMeasurement: (patientId: string, m: Measurement) => void;
   setMetaAgua: (patientId: string, meta: number) => void;
+  ensurePatient: (info: PatientSeed, activar?: boolean) => void;
 };
 
 const StoreContext = createContext<Store | null>(null);
