@@ -37,7 +37,7 @@ function RoleSelector() {
 
         <div className="mt-10 grid gap-5 sm:grid-cols-2">
           <Link
-            to="/paciente"
+            to="/acceso"
             className="card-float group flex flex-col gap-3 p-8 transition-transform hover:-translate-y-1"
           >
             <div className="flex size-14 items-center justify-center rounded-2xl bg-primary-soft">
@@ -53,7 +53,7 @@ function RoleSelector() {
           </Link>
 
           <Link
-            to="/nutricionista"
+            to="/auth"
             className="card-float group flex flex-col gap-3 p-8 transition-transform hover:-translate-y-1"
           >
             <div className="flex size-14 items-center justify-center rounded-2xl bg-water-soft">

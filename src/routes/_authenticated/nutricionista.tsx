@@ -7,6 +7,7 @@ import {
   Ruler,
   Trash2,
   Users,
+  UserPlus,
   UtensilsCrossed,
   History,
 } from "lucide-react";
@@ -28,8 +29,9 @@ import {
   useStore,
   type MealType,
 } from "@/lib/store";
+import { RegistroPacientes } from "@/components/RegistroPacientes";
 
-export const Route = createFileRoute("/nutricionista")({
+export const Route = createFileRoute("/_authenticated/nutricionista")({
   head: () => ({
     meta: [
       { title: "Panel del nutricionista — NutriCuida" },
@@ -48,7 +50,7 @@ export const Route = createFileRoute("/nutricionista")({
   component: Dashboard,
 });
 
-type Tab = "pacientes" | "menu" | "medidas" | "timeline";
+type Tab = "pacientes" | "registro" | "menu" | "medidas" | "timeline";
 
 function Dashboard() {
   const { patients, activePatient, setActivePatientId } = useStore();
@@ -56,6 +58,7 @@ function Dashboard() {
 
   const tabs: { id: Tab; label: string; icon: typeof Users }[] = [
     { id: "pacientes", label: "Pacientes", icon: Users },
+    { id: "registro", label: "Registro y accesos", icon: UserPlus },
     { id: "menu", label: "Menú semanal", icon: UtensilsCrossed },
     { id: "medidas", label: "Antropometría", icon: Ruler },
     { id: "timeline", label: "Timeline", icon: History },
@@ -115,6 +118,7 @@ function Dashboard() {
 
       <main className="mx-auto w-full max-w-7xl px-6 py-8">
         {tab === "pacientes" && <TablaPacientes />}
+        {tab === "registro" && <RegistroPacientes />}
         {tab === "menu" && <EditorMenu />}
         {tab === "medidas" && <Antropometria />}
         {tab === "timeline" && <Timeline />}

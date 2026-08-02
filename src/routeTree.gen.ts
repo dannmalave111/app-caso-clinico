@@ -10,63 +10,110 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as NutricionistaRouteImport } from './routes/nutricionista'
-import { Route as PacienteIndexRouteImport } from './routes/paciente.index'
-import { Route as PacienteProgresoRouteImport } from './routes/paciente.progreso'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AccesoRouteImport } from './routes/acceso'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedNutricionistaRouteImport } from './routes/_authenticated/nutricionista'
+import { Route as AuthenticatedPacienteIndexRouteImport } from './routes/_authenticated/paciente.index'
+import { Route as AuthenticatedPacienteProgresoRouteImport } from './routes/_authenticated/paciente.progreso'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const NutricionistaRoute = NutricionistaRouteImport.update({
-  id: '/nutricionista',
-  path: '/nutricionista',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PacienteIndexRoute = PacienteIndexRouteImport.update({
-  id: '/paciente/',
-  path: '/paciente/',
+const AccesoRoute = AccesoRouteImport.update({
+  id: '/acceso',
+  path: '/acceso',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PacienteProgresoRoute = PacienteProgresoRouteImport.update({
-  id: '/paciente/progreso',
-  path: '/paciente/progreso',
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedNutricionistaRoute =
+  AuthenticatedNutricionistaRouteImport.update({
+    id: '/nutricionista',
+    path: '/nutricionista',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPacienteIndexRoute =
+  AuthenticatedPacienteIndexRouteImport.update({
+    id: '/paciente/',
+    path: '/paciente/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPacienteProgresoRoute =
+  AuthenticatedPacienteProgresoRouteImport.update({
+    id: '/paciente/progreso',
+    path: '/paciente/progreso',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/nutricionista': typeof NutricionistaRoute
-  '/paciente/progreso': typeof PacienteProgresoRoute
-  '/paciente/': typeof PacienteIndexRoute
+  '/acceso': typeof AccesoRoute
+  '/auth': typeof AuthRoute
+  '/nutricionista': typeof AuthenticatedNutricionistaRoute
+  '/paciente/progreso': typeof AuthenticatedPacienteProgresoRoute
+  '/paciente/': typeof AuthenticatedPacienteIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/nutricionista': typeof NutricionistaRoute
-  '/paciente/progreso': typeof PacienteProgresoRoute
-  '/paciente': typeof PacienteIndexRoute
+  '/acceso': typeof AccesoRoute
+  '/auth': typeof AuthRoute
+  '/nutricionista': typeof AuthenticatedNutricionistaRoute
+  '/paciente/progreso': typeof AuthenticatedPacienteProgresoRoute
+  '/paciente': typeof AuthenticatedPacienteIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/nutricionista': typeof NutricionistaRoute
-  '/paciente/progreso': typeof PacienteProgresoRoute
-  '/paciente/': typeof PacienteIndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/acceso': typeof AccesoRoute
+  '/auth': typeof AuthRoute
+  '/_authenticated/nutricionista': typeof AuthenticatedNutricionistaRoute
+  '/_authenticated/paciente/progreso': typeof AuthenticatedPacienteProgresoRoute
+  '/_authenticated/paciente/': typeof AuthenticatedPacienteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/nutricionista' | '/paciente/progreso' | '/paciente/'
+  fullPaths:
+    | '/'
+    | '/acceso'
+    | '/auth'
+    | '/nutricionista'
+    | '/paciente/progreso'
+    | '/paciente/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/nutricionista' | '/paciente/progreso' | '/paciente'
-  id: '__root__' | '/' | '/nutricionista' | '/paciente/progreso' | '/paciente/'
+  to:
+    | '/'
+    | '/acceso'
+    | '/auth'
+    | '/nutricionista'
+    | '/paciente/progreso'
+    | '/paciente'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/acceso'
+    | '/auth'
+    | '/_authenticated/nutricionista'
+    | '/_authenticated/paciente/progreso'
+    | '/_authenticated/paciente/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  NutricionistaRoute: typeof NutricionistaRoute
-  PacienteProgresoRoute: typeof PacienteProgresoRoute
-  PacienteIndexRoute: typeof PacienteIndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AccesoRoute: typeof AccesoRoute
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -78,35 +125,71 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/nutricionista': {
-      id: '/nutricionista'
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/acceso': {
+      id: '/acceso'
+      path: '/acceso'
+      fullPath: '/acceso'
+      preLoaderRoute: typeof AccesoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/nutricionista': {
+      id: '/_authenticated/nutricionista'
       path: '/nutricionista'
       fullPath: '/nutricionista'
-      preLoaderRoute: typeof NutricionistaRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedNutricionistaRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/paciente/': {
-      id: '/paciente/'
+    '/_authenticated/paciente/': {
+      id: '/_authenticated/paciente/'
       path: '/paciente'
       fullPath: '/paciente/'
-      preLoaderRoute: typeof PacienteIndexRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedPacienteIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/paciente/progreso': {
-      id: '/paciente/progreso'
+    '/_authenticated/paciente/progreso': {
+      id: '/_authenticated/paciente/progreso'
       path: '/paciente/progreso'
       fullPath: '/paciente/progreso'
-      preLoaderRoute: typeof PacienteProgresoRouteImport
-      parentRoute: typeof rootRouteImport
+      preLoaderRoute: typeof AuthenticatedPacienteProgresoRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedNutricionistaRoute: typeof AuthenticatedNutricionistaRoute
+  AuthenticatedPacienteProgresoRoute: typeof AuthenticatedPacienteProgresoRoute
+  AuthenticatedPacienteIndexRoute: typeof AuthenticatedPacienteIndexRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedNutricionistaRoute: AuthenticatedNutricionistaRoute,
+  AuthenticatedPacienteProgresoRoute: AuthenticatedPacienteProgresoRoute,
+  AuthenticatedPacienteIndexRoute: AuthenticatedPacienteIndexRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  NutricionistaRoute: NutricionistaRoute,
-  PacienteProgresoRoute: PacienteProgresoRoute,
-  PacienteIndexRoute: PacienteIndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AccesoRoute: AccesoRoute,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
