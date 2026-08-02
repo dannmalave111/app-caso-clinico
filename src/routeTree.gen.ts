@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedNutricionistaRouteImport } from './routes/_authenticated/nutricionista'
 import { Route as AuthenticatedPacienteIndexRouteImport } from './routes/_authenticated/paciente.index'
 import { Route as AuthenticatedPacienteProgresoRouteImport } from './routes/_authenticated/paciente.progreso'
@@ -22,6 +23,11 @@ const IndexRoute = IndexRouteImport.update({
 } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedNutricionistaRoute =
@@ -45,12 +51,14 @@ const AuthenticatedPacienteProgresoRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/nutricionista': typeof AuthenticatedNutricionistaRoute
   '/paciente/progreso': typeof AuthenticatedPacienteProgresoRoute
   '/paciente/': typeof AuthenticatedPacienteIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/nutricionista': typeof AuthenticatedNutricionistaRoute
   '/paciente/progreso': typeof AuthenticatedPacienteProgresoRoute
   '/paciente': typeof AuthenticatedPacienteIndexRoute
@@ -59,19 +67,22 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
   '/_authenticated/nutricionista': typeof AuthenticatedNutricionistaRoute
   '/_authenticated/paciente/progreso': typeof AuthenticatedPacienteProgresoRoute
   '/_authenticated/paciente/': typeof AuthenticatedPacienteIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/nutricionista' | '/paciente/progreso' | '/paciente/'
+  fullPaths:
+    '/' | '/auth' | '/nutricionista' | '/paciente/progreso' | '/paciente/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/nutricionista' | '/paciente/progreso' | '/paciente'
+  to: '/' | '/auth' | '/nutricionista' | '/paciente/progreso' | '/paciente'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/auth'
     | '/_authenticated/nutricionista'
     | '/_authenticated/paciente/progreso'
     | '/_authenticated/paciente/'
@@ -80,6 +91,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -96,6 +108,13 @@ declare module '@tanstack/react-router' {
       path: ''
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/nutricionista': {
@@ -140,6 +159,7 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
