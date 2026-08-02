@@ -225,7 +225,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<Store>(() => {
-    const activePatient = patients.find((p) => p.id === activePatientId) ?? patients[0];
+    const activePatient = (patients.find((p) => p.id === activePatientId) ?? patients[0]) as Patient;
     return {
       patients,
       activePatientId: activePatient?.id ?? "",
