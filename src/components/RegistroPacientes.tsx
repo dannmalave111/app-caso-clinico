@@ -20,7 +20,7 @@ type Fila = {
   codigo: string;
 };
 
-const vacio = { nombre: "", edad: "70", telefono: "", objetivo: "", metaAgua: "8" };
+const vacio = { nombre: "", edad: "", telefono: "", objetivo: "", metaAgua: "" };
 
 export function RegistroPacientes() {
   const { ensurePatient } = useStore();

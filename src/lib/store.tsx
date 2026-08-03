@@ -4,19 +4,24 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
+import { useServerFn } from "@tanstack/react-start";
+import {
+  loadMyPatients,
+  loadMyPatientRecord,
+  syncPatientData,
+} from "@/lib/patients.functions";
+import {
+  DEFAULT_MACROS,
+  STORAGE_KEY,
+  SYNC_DEBOUNCE_MS,
+} from "@/lib/constants";
+
 
 export type MealType = "Desayuno" | "Media mañana" | "Almuerzo" | "Merienda" | "Cena";
-
-export const MEAL_ORDER: MealType[] = [
-  "Desayuno",
-  "Media mañana",
-  "Almuerzo",
-  "Merienda",
-  "Cena",
-];
 
 export type MealBlock = {
   id: string;
@@ -50,7 +55,13 @@ export type Measurement = {
   pliegueSubescapular: number;
 };
 
-export type Medicamento = { id: string; tipo: string; gramaje: string; horario: string };
+export type Medicamento = {
+  id: string;
+  tipo: string;
+  gramaje: string;
+  horario: string;
+  horariosNotificables?: string[];
+};
 
 export type Actividad = {
   id: string;
@@ -70,6 +81,15 @@ export type Patient = {
   telefono: string;
   objetivo: string;
   metaAgua: number;
+  requerimientoCalorico?: number | undefined;
+  requerimientoHidricoMl?: number | undefined;
+  encuestaFrecuenciaUrl?: string | undefined;
+  quienPreparaComida?: string | undefined;
+  tieneHijos?: string | undefined;
+  detallesHijos?: string | undefined;
+  observacionesClinicas?: string | undefined;
+  antecedentesDriveUrl?: string | undefined;
+  menuDriveUrl?: string | undefined;
   estadoCivil: string;
   ocupacion: string;
   diagnostico: string;
@@ -84,15 +104,8 @@ export type Patient = {
 };
 
 
-export const WEEKDAYS = [
-  "Domingo",
-  "Lunes",
-  "Martes",
-  "Miércoles",
-  "Jueves",
-  "Viernes",
-  "Sábado",
-];
+// Re-exported from constants
+export { MEAL_ORDER, WEEKDAYS, BRISTOL, ORINA, MEAL_TIMES } from "@/lib/constants";
 
 export function isoDate(d: Date) {
   return d.toISOString().slice(0, 10);
@@ -127,123 +140,6 @@ export function emptyMeasurement(fecha: string): Measurement {
 let seq = 0;
 const uid = (p: string) => `${p}-${Date.now().toString(36)}-${(seq++).toString(36)}`;
 
-function block(tipo: MealType, titulo: string, descripcion: string, alternativas: string[]): MealBlock {
-  return { id: `${tipo}-${titulo}`.replace(/\s+/g, "_").toLowerCase() + `-${seq++}`, tipo, titulo, descripcion, alternativas };
-}
-
-function planBase(): DayPlan {
-  const plan: DayPlan = {};
-  for (let i = 0; i < 7; i++) {
-    plan[String(i)] = [
-      block("Desayuno", "Avena con fruta", "1 taza de avena cocida con leche descremada, media manzana en trozos y una cucharadita de canela.", [
-        "Yogur natural con papaya y 2 cucharadas de granola",
-        "2 huevos revueltos con 1 rebanada de pan integral",
-      ]),
-      block("Media mañana", "Fruta y semillas", "1 pera mediana y 6 almendras sin sal.", [
-        "1 mandarina con 1 puñado de nueces",
-        "1 vaso de yogur bebible sin azúcar",
-      ]),
-      block("Almuerzo", "Pollo con verduras", "120 g de pechuga de pollo a la plancha, 1 taza de arroz integral y ensalada de lechuga con tomate.", [
-        "Pescado al horno con puré de camote y ejotes",
-        "Guiso de lentejas con verduras y 1/2 taza de arroz",
-      ]),
-      block("Merienda", "Colación ligera", "1 taza de gelatina sin azúcar y 3 galletas integrales.", [
-        "1 rebanada de queso panela con jitomate",
-        "1 vaso de leche descremada tibia",
-      ]),
-      block("Cena", "Sopa y proteína", "Crema de calabaza (1 taza) con 90 g de queso panela asado.", [
-        "Caldo de verduras con pollo deshebrado",
-        "Omelette de claras con espinaca",
-      ]),
-    ];
-  }
-  return plan;
-}
-
-function seedLogs(metaAgua: number, adherencia: number, plan: DayPlan): Record<string, DailyLog> {
-  const logs: Record<string, DailyLog> = {};
-  for (let i = 1; i <= 13; i++) {
-    const d = daysAgo(i);
-    const blocks = plan[String(d.getDay())] ?? [];
-    const cumple = Math.random() < adherencia;
-    const n = cumple ? blocks.length : Math.max(1, Math.floor(blocks.length * 0.5));
-    logs[isoDate(d)] = {
-      completados: blocks.slice(0, n).map((b) => b.id),
-      agua: cumple ? metaAgua : Math.max(2, metaAgua - 3),
-      bristol: 3 + Math.floor(Math.random() * 2),
-      orina: cumple ? 1 + Math.floor(Math.random() * 2) : 3 + Math.floor(Math.random() * 2),
-      medicacionTomada: [],
-      nota: i % 4 === 0 ? "Me sentí con más energía hoy." : "",
-    };
-
-  }
-  return logs;
-}
-
-function makePatient(
-  nombre: string,
-  edad: number,
-  telefono: string,
-  objetivo: string,
-  pesoBase: number,
-  adherencia: number,
-): Patient {
-  const plan = planBase();
-  const metaAgua = 8;
-  return {
-    id: uid("pac"),
-    nombre,
-    edad,
-    telefono,
-    objetivo,
-    metaAgua,
-    estadoCivil: "Viudo(a)",
-    ocupacion: "Jubilado(a)",
-    diagnostico: "Hipertensión arterial controlada",
-    medicacion: [
-      { id: uid("med"), tipo: "Losartán", gramaje: "50 mg", horario: "08:00" },
-      { id: uid("med"), tipo: "Metformina", gramaje: "850 mg", horario: "14:00" },
-    ],
-    formulas:
-      "Harris-Benedict (GEB) × factor de actividad 1.3\nDistribución: CH 50% · Pr 20% · Lp 30%",
-    excelUrl: "",
-    macros: { ch: 50, pr: 20, lp: 30 },
-    actividades: [
-      {
-        id: uid("act"),
-        fecha: isoDate(daysAgo(2)),
-        tipo: "Caminata",
-        minutos: 30,
-        intensidad: "Baja",
-        notas: "Caminata en el parque, sin molestias.",
-      },
-      {
-        id: uid("act"),
-        fecha: isoDate(daysAgo(5)),
-        tipo: "Ejercicios de fuerza suave",
-        minutos: 20,
-        intensidad: "Media",
-        notas: "Bandas elásticas en casa.",
-      },
-    ],
-    plan,
-    logs: seedLogs(metaAgua, adherencia, plan),
-    medidas: [
-      { ...emptyMeasurement(isoDate(daysAgo(60))), peso: pesoBase + 2.8, cintura: 98, cadera: 106, bicipital: 30, abdominal: 100, musloMedio: 52, pantorrilla: 35, pliegueTricipital: 22, pliegueSubescapular: 24 },
-      { ...emptyMeasurement(isoDate(daysAgo(30))), peso: pesoBase + 1.4, cintura: 96, cadera: 105, bicipital: 29.5, abdominal: 98, musloMedio: 51, pantorrilla: 34.5, pliegueTricipital: 21, pliegueSubescapular: 23 },
-      { ...emptyMeasurement(isoDate(daysAgo(7))), peso: pesoBase, cintura: 94, cadera: 104, bicipital: 29, abdominal: 96, musloMedio: 50, pantorrilla: 34, pliegueTricipital: 20, pliegueSubescapular: 22 },
-    ],
-  };
-}
-
-function seedPatients(): Patient[] {
-  return [
-    makePatient("Doña Carmen Ruiz", 72, "5215512345678", "Control de glucosa y peso", 68.5, 0.85),
-    makePatient("Don Alberto Peña", 78, "5215598765432", "Salud cardiovascular", 81.2, 0.6),
-    makePatient("Doña Rosa Medina", 69, "5215544332211", "Digestión y energía", 74.0, 0.75),
-  ];
-}
-
 export type PatientSeed = {
   id: string;
   nombre: string;
@@ -258,6 +154,43 @@ export type PatientSeed = {
   >
 >;
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function dbRowToPatient(row: Record<string, any>): Patient {
+  const rawMacros = (row["macros"] ?? {}) as Record<string, unknown>;
+  return normalizePatient({
+    id: row["id"] as string,
+    nombre: row["nombre"] as string,
+    edad: row["edad"] as number,
+    telefono: row["telefono"] as string ?? "",
+    objetivo: row["objetivo"] as string ?? "",
+    metaAgua: row["meta_agua"] as number ?? 8,
+    estadoCivil: row["estado_civil"] as string ?? "",
+    ocupacion: row["ocupacion"] as string ?? "",
+    diagnostico: row["diagnostico"] as string ?? "",
+    medicacion: (row["medicacion"] ?? []) as Medicamento[],
+    formulas: row["formulas"] as string ?? "",
+    excelUrl: row["excel_url"] as string ?? "",
+    macros: {
+      ch: (rawMacros["ch"] as number) ?? DEFAULT_MACROS.ch,
+      pr: (rawMacros["pr"] as number) ?? DEFAULT_MACROS.pr,
+      lp: (rawMacros["lp"] as number) ?? DEFAULT_MACROS.lp,
+    },
+    requerimientoCalorico: rawMacros["requerimientoCalorico"] as number | undefined,
+    requerimientoHidricoMl: rawMacros["requerimientoHidricoMl"] as number | undefined,
+    encuestaFrecuenciaUrl: rawMacros["encuestaFrecuenciaUrl"] as string | undefined,
+    quienPreparaComida: rawMacros["quienPreparaComida"] as string | undefined,
+    tieneHijos: rawMacros["tieneHijos"] as string | undefined,
+    detallesHijos: rawMacros["detallesHijos"] as string | undefined,
+    observacionesClinicas: rawMacros["observacionesClinicas"] as string | undefined,
+    antecedentesDriveUrl: rawMacros["antecedentesDriveUrl"] as string | undefined,
+    menuDriveUrl: rawMacros["menuDriveUrl"] as string | undefined,
+    plan: (row["plan_semanal"] ?? {}) as DayPlan,
+    medidas: (row["medidas"] ?? []) as Measurement[],
+    logs: (row["logs"] ?? {}) as Record<string, DailyLog>,
+    actividades: (row["actividades"] ?? []) as Actividad[],
+  });
+}
+
 function patientFromSeed(info: PatientSeed): Patient {
   return {
     ...info,
@@ -267,9 +200,9 @@ function patientFromSeed(info: PatientSeed): Patient {
     medicacion: info.medicacion ?? [],
     formulas: info.formulas ?? "",
     excelUrl: info.excelUrl ?? "",
-    macros: info.macros ?? { ch: 50, pr: 20, lp: 30 },
+    macros: info.macros ?? DEFAULT_MACROS,
     actividades: [],
-    plan: planBase(),
+    plan: {},
     logs: {},
     medidas: [],
   };
@@ -289,7 +222,7 @@ function normalizePatient(p: Patient): Patient {
     medicacion: p.medicacion ?? [],
     formulas: p.formulas ?? "",
     excelUrl: p.excelUrl ?? "",
-    macros: p.macros ?? { ch: 50, pr: 20, lp: 30 },
+    macros: p.macros ?? DEFAULT_MACROS,
     actividades: p.actividades ?? [],
     medidas: (p.medidas ?? []).map((m) => ({ ...emptyMeasurement(m.fecha), ...m })),
     logs,
@@ -310,6 +243,7 @@ type Store = {
   removeBlock: (patientId: string, day: string, blockId: string) => void;
   addMeasurement: (patientId: string, m: Measurement) => void;
   removeMeasurement: (patientId: string, fecha: string) => void;
+  updateMeasurementDate: (patientId: string, oldFecha: string, newFecha: string) => void;
   setMetaAgua: (patientId: string, meta: number) => void;
   updatePatient: (patientId: string, patch: Partial<Patient>) => void;
   addActividad: (patientId: string, a: Omit<Actividad, "id">) => void;
@@ -319,47 +253,102 @@ type Store = {
 };
 
 const StoreContext = createContext<Store | null>(null);
-const STORAGE_KEY = "nutriplan-store-v1";
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [patients, setPatients] = useState<Patient[]>(() => seedPatients());
+  const [patients, setPatients] = useState<Patient[]>(() => []);
   const [activePatientId, setActivePatientId] = useState<string>("");
   const [hydrated, setHydrated] = useState(false);
+  const syncTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const loadPatientsFn = useServerFn(loadMyPatients);
+  const loadPatientRecordFn = useServerFn(loadMyPatientRecord);
+  const syncPatientDataFn = useServerFn(syncPatientData);
+
+  // Debounced sync to Supabase (1.5s after last change)
+  const scheduleSyncToSupabase = useCallback(
+    (patient: Patient) => {
+      if (syncTimer.current) clearTimeout(syncTimer.current);
+      syncTimer.current = setTimeout(() => {
+        syncPatientDataFn({
+          data: {
+            id: patient.id,
+            plan_semanal: patient.plan as Record<string, unknown>,
+            medidas: patient.medidas,
+            logs: patient.logs as Record<string, unknown>,
+            actividades: patient.actividades,
+          },
+        }).catch((err: unknown) => console.warn("[Store] sync failed:", err));
+      }, SYNC_DEBOUNCE_MS);
+    },
+    [syncPatientDataFn],
+  );
+
+  // Load localStorage first, then try Supabase
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Patient[];
-        if (Array.isArray(parsed) && parsed.length) {
-          setPatients(parsed.map(normalizePatient));
-          setActivePatientId(parsed[0]!.id);
-          setHydrated(true);
-          return;
+    let cancelled = false;
+    const loadLocal = () => {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw) as Patient[];
+          if (Array.isArray(parsed) && parsed.length) {
+            setPatients(parsed.map(normalizePatient));
+            setActivePatientId(parsed[0]!.id);
+          }
         }
-      }
-    } catch {
-      /* ignore */
-    }
-    setPatients((p) => {
-      setActivePatientId(p[0]!.id);
-      return p;
-    });
-    setHydrated(true);
+      } catch { /* ignore */ }
+    };
+
+    loadLocal();
+
+    // Then try to refresh from Supabase (nutritionist flow)
+    loadPatientsFn({})
+      .then((rows) => {
+        if (cancelled || !rows || rows.length === 0) return;
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const dbPatients = (rows as Record<string, any>[]).map(dbRowToPatient);
+        setPatients(dbPatients);
+        setActivePatientId(dbPatients[0]!.id);
+      })
+      .catch(() => {
+        // Not a nutritionist or not authenticated — try patient record
+        loadPatientRecordFn({})
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .then((row: Record<string, any> | null) => {
+            if (cancelled || !row) return;
+            const p = dbRowToPatient(row);
+            setPatients([p]);
+            setActivePatientId(p.id);
+          })
+          .catch(() => { /* use localStorage fallback */ });
+      })
+      .finally(() => {
+        if (!cancelled) setHydrated(true);
+      });
+
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Persist to localStorage whenever patients change
   useEffect(() => {
     if (!hydrated) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(patients));
-    } catch {
-      /* ignore */
-    }
+    } catch { /* ignore */ }
   }, [patients, hydrated]);
 
-  const update = useCallback((patientId: string, fn: (p: Patient) => Patient) => {
-    setPatients((prev) => prev.map((p) => (p.id === patientId ? fn(p) : p)));
-  }, []);
+  const update = useCallback(
+    (patientId: string, fn: (p: Patient) => Patient) => {
+      setPatients((prev) => {
+        const next = prev.map((p) => (p.id === patientId ? fn(p) : p));
+        const updated = next.find((p) => p.id === patientId);
+        if (updated) scheduleSyncToSupabase(updated);
+        return next;
+      });
+    },
+    [scheduleSyncToSupabase],
+  );
 
   const value = useMemo<Store>(() => {
     const activePatient = (patients.find((p) => p.id === activePatientId) ?? patients[0]) as Patient;
@@ -416,6 +405,13 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         })),
       removeMeasurement: (patientId, fecha) =>
         update(patientId, (p) => ({ ...p, medidas: p.medidas.filter((m) => m.fecha !== fecha) })),
+      updateMeasurementDate: (patientId, oldFecha, newFecha) =>
+        update(patientId, (p) => ({
+          ...p,
+          medidas: p.medidas
+            .map((m) => (m.fecha === oldFecha ? { ...m, fecha: newFecha } : m))
+            .sort((a, b) => a.fecha.localeCompare(b.fecha)),
+        })),
       setMetaAgua: (patientId, meta) => update(patientId, (p) => ({ ...p, metaAgua: meta })),
       updatePatient: (patientId, patch) => update(patientId, (p) => ({ ...p, ...patch })),
       addActividad: (patientId, a) =>
@@ -448,31 +444,3 @@ export function useStore() {
   if (!ctx) throw new Error("useStore debe usarse dentro de StoreProvider");
   return ctx;
 }
-
-export const BRISTOL = [
-  { n: 1, label: "Bolitas duras", desc: "Difícil de evacuar" },
-  { n: 2, label: "Forma de salchicha con grumos", desc: "Algo dura" },
-  { n: 3, label: "Salchicha con grietas", desc: "Normal" },
-  { n: 4, label: "Suave y lisa", desc: "Ideal" },
-  { n: 5, label: "Trozos blandos", desc: "Tiende a suelta" },
-  { n: 6, label: "Trozos deshechos", desc: "Blanda" },
-  { n: 7, label: "Totalmente líquida", desc: "Diarrea" },
-];
-
-export const ORINA = [
-  { n: 1, color: "#F7F3C8", label: "Muy clara", desc: "Hidratación excelente" },
-  { n: 2, color: "#F3EA9E", label: "Clara", desc: "Buena hidratación" },
-  { n: 3, color: "#EFDF6B", label: "Amarillo pálido", desc: "Hidratación normal" },
-  { n: 4, color: "#E8CF3C", label: "Amarillo", desc: "Tome un vaso de agua" },
-  { n: 5, color: "#D9B31F", label: "Amarillo oscuro", desc: "Falta de agua" },
-  { n: 6, color: "#BF8C14", label: "Ámbar", desc: "Deshidratación" },
-  { n: 7, color: "#9A650E", label: "Café claro", desc: "Avise a su nutricionista" },
-];
-
-export const MEAL_TIMES: Record<MealType, string> = {
-  Desayuno: "08:00",
-  "Media mañana": "11:00",
-  Almuerzo: "14:00",
-  Merienda: "17:00",
-  Cena: "20:00",
-};

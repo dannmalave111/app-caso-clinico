@@ -17,7 +17,7 @@ export type A11ySettings = {
 };
 
 const DEFAULTS: A11ySettings = { fontScale: 1, contrast: "normal", focoAlto: false };
-const STORAGE_KEY = "nutricuida-a11y-v1";
+import { A11Y_STORAGE_KEY } from "@/lib/constants";
 
 type A11yContext = A11ySettings & {
   setFontScale: (v: FontScale) => void;
@@ -33,7 +33,7 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(A11Y_STORAGE_KEY);
       if (raw) setSettings({ ...DEFAULTS, ...(JSON.parse(raw) as Partial<A11ySettings>) });
     } catch {
       /* ignore */
@@ -47,7 +47,7 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     root.classList.toggle("contraste-alto", settings.contrast === "alto");
     root.classList.toggle("foco-alto", settings.focoAlto);
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+      localStorage.setItem(A11Y_STORAGE_KEY, JSON.stringify(settings));
     } catch {
       /* ignore */
     }

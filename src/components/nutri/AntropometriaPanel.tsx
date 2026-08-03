@@ -11,25 +11,14 @@ import {
 } from "recharts";
 
 import { emptyMeasurement, isoDate, useStore, type Measurement } from "@/lib/store";
+import { CAMPOS_ANTROPOMETRIA } from "@/lib/constants";
 
 const field =
   "mt-1 w-full rounded-xl border border-border bg-card px-4 py-3 text-base focus:border-primary focus:outline-none";
 const label = "block text-sm font-bold text-muted-foreground";
 
-const CAMPOS: { key: keyof Measurement; texto: string; unidad: string }[] = [
-  { key: "peso", texto: "Peso", unidad: "kg" },
-  { key: "cintura", texto: "Cintura", unidad: "cm" },
-  { key: "cadera", texto: "Cadera", unidad: "cm" },
-  { key: "bicipital", texto: "Circunferencia bicipital", unidad: "cm" },
-  { key: "abdominal", texto: "Circunferencia abdominal", unidad: "cm" },
-  { key: "musloMedio", texto: "Muslo medio", unidad: "cm" },
-  { key: "pantorrilla", texto: "Pantorrilla", unidad: "cm" },
-  { key: "pliegueTricipital", texto: "Pliegue tricipital", unidad: "mm" },
-  { key: "pliegueSubescapular", texto: "Pliegue subescapular", unidad: "mm" },
-];
-
 export function AntropometriaPanel() {
-  const { activePatient, addMeasurement, removeMeasurement } = useStore();
+  const { activePatient, addMeasurement, removeMeasurement, updateMeasurementDate } = useStore();
   const medidas = activePatient.medidas;
   const ultima = medidas[medidas.length - 1];
   const previa = medidas[medidas.length - 2];
@@ -113,7 +102,7 @@ export function AntropometriaPanel() {
             />
           </div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
-            {CAMPOS.map((c) => (
+            {CAMPOS_ANTROPOMETRIA.map((c) => (
               <div key={c.key}>
                 <label className={label} htmlFor={`m-${c.key}`}>
                   {c.texto} ({c.unidad})
@@ -176,7 +165,7 @@ export function AntropometriaPanel() {
           <thead>
             <tr className="border-b border-border text-sm uppercase tracking-wide text-muted-foreground">
               <th className="px-4 py-4">Fecha</th>
-              {CAMPOS.map((c) => (
+              {CAMPOS_ANTROPOMETRIA.map((c) => (
                 <th key={c.key} className="px-4 py-4">
                   {c.texto}
                 </th>
@@ -186,9 +175,20 @@ export function AntropometriaPanel() {
           </thead>
           <tbody>
             {[...medidas].reverse().map((m) => (
-              <tr key={m.fecha} className="border-b border-border last:border-0">
-                <td className="px-4 py-4 font-bold">{m.fecha}</td>
-                {CAMPOS.map((c) => (
+              <tr key={m.fecha} className="border-b border-border last:border-0 hover:bg-muted/30">
+                <td className="px-4 py-4">
+                  <input
+                    type="date"
+                    value={m.fecha}
+                    onChange={(e) => {
+                      if (e.target.value) {
+                        updateMeasurementDate(activePatient.id, m.fecha, e.target.value);
+                      }
+                    }}
+                    className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-bold focus:border-primary focus:outline-none"
+                  />
+                </td>
+                {CAMPOS_ANTROPOMETRIA.map((c) => (
                   <td key={c.key} className="px-4 py-4">
                     {m[c.key] || "—"}
                   </td>

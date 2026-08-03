@@ -62,19 +62,23 @@ export function buildAntecedentesHTML(p: Patient) {
   <table>
     <tr><th>Nombre</th><td>${esc(p.nombre)}</td><th>Edad</th><td>${p.edad} años</td></tr>
     <tr><th>Estado civil</th><td>${esc(p.estadoCivil || "—")}</td><th>Ocupación</th><td>${esc(p.ocupacion || "—")}</td></tr>
-    <tr><th>Teléfono</th><td>${esc(p.telefono)}</td><th>Meta de agua</th><td>${p.metaAgua} vasos/día</td></tr>
+    <tr><th>Teléfono</th><td>${esc(p.telefono)}</td><th>Meta de agua</th><td>${p.requerimientoHidricoMl ? `${p.requerimientoHidricoMl} mL (${Math.round(p.requerimientoHidricoMl / 250)} vasos)` : `${p.metaAgua} vasos/día`}</td></tr>
+    <tr><th>¿Quién prepara la comida?</th><td>${esc(p.quienPreparaComida || "—")}</td><th>Hijos</th><td>${esc(p.tieneHijos ? `${p.tieneHijos} ${p.detallesHijos ? `(${p.detallesHijos})` : ""}` : "—")}</td></tr>
     <tr><th>Objetivo</th><td colspan="3">${esc(p.objetivo)}</td></tr>
   </table>
 
-  <h2>Diagnóstico médico</h2>
-  <p>${esc(p.diagnostico || "Sin diagnóstico registrado")}</p>
+  <h2>Diagnóstico médico y Observaciones</h2>
+  <p><strong>Diagnóstico:</strong> ${esc(p.diagnostico || "Sin diagnóstico registrado")}</p>
+  ${p.observacionesClinicas ? `<p><strong>Observaciones clínicas:</strong> ${esc(p.observacionesClinicas)}</p>` : ""}
 
   <h2>Medicación</h2>
   <table><tr><th>Tipo</th><th>Gramaje</th><th>Horario</th></tr>${filasMedicacion}</table>
 
-  <h2>Plan nutricional</h2>
+  <h2>Plan nutricional y Requerimientos</h2>
+  <p>Requerimiento calórico: <strong>${p.requerimientoCalorico ? `${p.requerimientoCalorico} kcal/día` : "Sin especificar"}</strong></p>
   <p>Distribución de macronutrientes: <strong>CH ${p.macros.ch}% · Pr ${p.macros.pr}% · Lp ${p.macros.lp}%</strong></p>
   <p>Fórmulas de cálculo:<br />${esc(p.formulas || "—").replace(/\n/g, "<br />")}</p>
+  ${p.antecedentesDriveUrl ? `<p>Documento de antecedentes en nube/Drive: <a href="${esc(p.antecedentesDriveUrl)}">${esc(p.antecedentesDriveUrl)}</a></p>` : ""}
 
   <h2>Antropometría</h2>
   <p>Última medición: ${ultima ? `${ultima.fecha} · ${ultima.peso} kg` : "sin registros"}</p>

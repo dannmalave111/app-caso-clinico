@@ -36,20 +36,34 @@ export function Recordatorios({ fecha }: { fecha: string }) {
       hecho: log.completados.includes(b.id),
       accion: () => toggleMeal(activePatient.id, fecha, b.id),
     })),
-    ...activePatient.medicacion.map((m) => ({
-      id: `med-${m.id}`,
-      hora: m.horario || "08:00",
-      titulo: `Tomar ${m.tipo}`,
-      detalle: m.gramaje,
-      tipo: "medicacion" as const,
-      hecho: log.medicacionTomada.includes(m.id),
-      accion: () =>
-        updateLog(activePatient.id, fecha, {
-          medicacionTomada: log.medicacionTomada.includes(m.id)
-            ? log.medicacionTomada.filter((x) => x !== m.id)
-            : [...log.medicacionTomada, m.id],
-        }),
-    })),
+    ...activePatient.medicacion.flatMap((m) => {
+      const horarios =
+        m.horariosNotificables && m.horariosNotificables.filter(Boolean).length > 0
+          ? m.horariosNotificables.filter(Boolean)
+          : [m.horario || "08:00"];
+
+      return horarios.map((h, idx) => {
+        const keyId = `med-${m.id}-${idx}-${h}`;
+        const hecho =
+          log.medicacionTomada.includes(keyId) ||
+          (horarios.length === 1 && log.medicacionTomada.includes(m.id));
+
+        return {
+          id: keyId,
+          hora: h,
+          titulo: `Tomar ${m.tipo}`,
+          detalle: `${m.gramaje}${horarios.length > 1 ? ` · Toma ${idx + 1}` : ""}`,
+          tipo: "medicacion" as const,
+          hecho,
+          accion: () =>
+            updateLog(activePatient.id, fecha, {
+              medicacionTomada: hecho
+                ? log.medicacionTomada.filter((x) => x !== keyId && x !== m.id)
+                : [...log.medicacionTomada, keyId, ...(horarios.length === 1 ? [m.id] : [])],
+            }),
+        };
+      });
+    }),
     {
       id: "agua",
       hora: "Todo el día",

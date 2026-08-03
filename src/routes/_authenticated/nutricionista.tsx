@@ -123,7 +123,7 @@ function Dashboard() {
         </nav>
       </header>
 
-      <main className="mx-auto w-full max-w-7xl px-6 py-8">
+      <main className="mx-auto w-full max-w-7xl px-6 py-8 pb-24 sm:pb-8">
         {tab === "pacientes" && <TablaPacientes />}
         {tab === "registro" && <RegistroPacientes />}
         {tab === "ficha" && <FichaClinica />}
@@ -138,7 +138,7 @@ function Dashboard() {
         href={`https://wa.me/${activePatient.telefono}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-6 right-6 z-40 flex items-center gap-3 rounded-full bg-primary px-6 py-4 text-lg font-extrabold text-primary-foreground shadow-[var(--shadow-float)] transition-transform hover:-translate-y-0.5"
+        className="fixed bottom-20 right-6 z-40 flex items-center gap-3 rounded-full bg-primary px-6 py-4 text-lg font-extrabold text-primary-foreground shadow-[var(--shadow-float)] transition-transform hover:-translate-y-0.5 max-sm:px-4 max-sm:py-3 max-sm:text-base"
       >
         <MessageCircle className="size-6" aria-hidden="true" />
         WhatsApp
@@ -234,19 +234,24 @@ function TablaPacientes() {
 }
 
 function EditorMenu() {
-  const { activePatient, updateBlock, addBlock, removeBlock } = useStore();
+  const { activePatient, updateBlock, addBlock, removeBlock, updatePatient } = useStore();
   const [dia, setDia] = useState(String(new Date().getDay()));
+  const [driveUrl, setDriveUrl] = useState(activePatient.menuDriveUrl ?? "");
   const bloques = [...(activePatient.plan[dia] ?? [])].sort(
     (a, b) => MEAL_ORDER.indexOf(a.tipo) - MEAL_ORDER.indexOf(b.tipo),
   );
 
+  const guardarDriveUrl = () => {
+    updatePatient(activePatient.id, { menuDriveUrl: driveUrl });
+  };
+
   return (
-    <section>
+    <section className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-extrabold">Menú semanal de {activePatient.nombre}</h2>
           <p className="text-muted-foreground">
-            Los cambios se sincronizan al instante con la vista del paciente.
+            Gestione el plan manual interactivo y/o vincule un documento de Google Drive con el menú semanal.
           </p>
         </div>
         <button
@@ -258,6 +263,40 @@ function EditorMenu() {
           Agregar tiempo de comida
         </button>
       </div>
+
+      {/* Menú desde Documento o Link de Drive */}
+      <article className="card-float p-6 space-y-3">
+        <h3 className="text-lg font-bold">Documento / Menú Semanal en Google Drive</h3>
+        <p className="text-sm text-muted-foreground">
+          Puede pegar el enlace a un documento de Drive, PDF u Hoja de cálculo para que el paciente también pueda visualizarlo directamente.
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <input
+            type="url"
+            placeholder="https://docs.google.com/document/d/..."
+            value={driveUrl}
+            onChange={(e) => setDriveUrl(e.target.value)}
+            className="flex-1 min-w-[18rem] rounded-xl border border-border bg-card px-4 py-3 text-base"
+          />
+          <button
+            type="button"
+            onClick={guardarDriveUrl}
+            className="rounded-xl bg-primary px-4 py-3 font-bold text-primary-foreground hover:opacity-90"
+          >
+            Guardar Enlace de Drive
+          </button>
+          {activePatient.menuDriveUrl && (
+            <a
+              href={activePatient.menuDriveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-xl bg-muted px-4 py-3 font-bold hover:bg-secondary"
+            >
+              Abrir Documento en Drive
+            </a>
+          )}
+        </div>
+      </article>
 
       <div className="mt-5 flex flex-wrap gap-2">
         {WEEKDAYS.map((d, i) => (

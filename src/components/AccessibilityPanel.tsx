@@ -12,19 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { Switch } from "@/components/ui/switch";
 import { useAccessibility, type ContrastMode, type FontScale } from "@/lib/accessibility";
-
-const SIZES: { value: FontScale; label: string }[] = [
-  { value: 1, label: "Normal" },
-  { value: 1.15, label: "Grande" },
-  { value: 1.3, label: "Muy grande" },
-  { value: 1.5, label: "Máximo" },
-];
-
-const CONTRASTS: { value: ContrastMode; label: string; desc: string }[] = [
-  { value: "normal", label: "Claro", desc: "Colores suaves" },
-  { value: "alto", label: "Alto contraste", desc: "Texto más marcado" },
-  { value: "oscuro", label: "Oscuro", desc: "Fondo oscuro" },
-];
+import { SIZES_ACCESIBILIDAD, CONTRASTS_ACCESIBILIDAD } from "@/lib/constants";
 
 export function AccessibilityPanel() {
   const [open, setOpen] = useState(false);
@@ -55,7 +43,7 @@ export function AccessibilityPanel() {
               Tamaño de la letra
             </h3>
             <div className="grid grid-cols-2 gap-3">
-              {SIZES.map((s) => {
+              {SIZES_ACCESIBILIDAD.map((s) => {
                 const active = a11y.fontScale === s.value;
                 return (
                   <button
@@ -81,7 +69,7 @@ export function AccessibilityPanel() {
               Contraste y colores
             </h3>
             <div className="space-y-3">
-              {CONTRASTS.map((c) => {
+              {CONTRASTS_ACCESIBILIDAD.map((c) => {
                 const active = a11y.contrast === c.value;
                 return (
                   <button

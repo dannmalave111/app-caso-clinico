@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
-import { claimNutricionista } from "@/lib/patients.functions";
+import { autoConfirmNutricionista, claimNutricionista, registerNutricionista } from "@/lib/patients.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -63,21 +63,63 @@ function AuthPage() {
     setCargando(true);
     try {
       if (modo === "crear") {
-        const { data, error } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: { emailRedirectTo: window.location.origin },
-        });
-        if (error) throw error;
-        if (!data.session) {
-          toast.success("Cuenta creada. Revise su correo para confirmarla.");
-          return;
+        let registroExitoso = false;
+
+        // Intento 1: registro via server (admin API — no requiere verificación)
+        try {
+          await registerNutricionista({ data: { email: email.trim(), password } });
+          registroExitoso = true;
+        } catch {
+          // Intento 2: fallback con signUp estándar del cliente
+          const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+            email: email.trim(),
+            password,
+            options: { emailRedirectTo: window.location.origin },
+          });
+          if (signUpError) throw signUpError;
+
+          // Auto-confirmar vía admin server si es posible
+          try {
+            await autoConfirmNutricionista({ data: { email: email.trim() } });
+            registroExitoso = true;
+          } catch {
+            // Si no se pudo auto-confirmar, el usuario tiene que verificar el correo
+            if (!signUpData.session) {
+              toast.success("Cuenta creada. Si no recibe correo de verificación, desactive 'Confirm Email' en Supabase.");
+              setCargando(false);
+              return;
+            }
+            registroExitoso = true;
+          }
+        }
+
+        if (registroExitoso) {
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: email.trim(),
+            password,
+          });
+          if (signInError) throw signInError;
         }
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
+        // Login normal
+        let { error } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password,
         });
+
+        if (error && error.message.toLowerCase().includes("email not confirmed")) {
+          try {
+            await autoConfirmNutricionista({ data: { email: email.trim() } });
+            const retry = await supabase.auth.signInWithPassword({
+              email: email.trim(),
+              password,
+            });
+            error = retry.error;
+          } catch {
+            // Ignorar error de servidor y mantener el error original
+          }
+        }
+
         if (error) throw error;
       }
       await entrarComoNutricionista();

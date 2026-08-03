@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       patients: {
         Row: {
+          actividades: Json
           codigo: string
           created_at: string
           created_by: string | null
@@ -25,17 +26,21 @@ export type Database = {
           excel_url: string
           formulas: string
           id: string
+          logs: Json
           macros: Json
           medicacion: Json
+          medidas: Json
           meta_agua: number
           nombre: string
           objetivo: string
           ocupacion: string
+          plan_semanal: Json
           telefono: string
           updated_at: string
           user_id: string | null
         }
         Insert: {
+          actividades?: Json
           codigo: string
           created_at?: string
           created_by?: string | null
@@ -45,17 +50,21 @@ export type Database = {
           excel_url?: string
           formulas?: string
           id?: string
+          logs?: Json
           macros?: Json
           medicacion?: Json
+          medidas?: Json
           meta_agua?: number
           nombre: string
           objetivo?: string
           ocupacion?: string
+          plan_semanal?: Json
           telefono?: string
           updated_at?: string
           user_id?: string | null
         }
         Update: {
+          actividades?: Json
           codigo?: string
           created_at?: string
           created_by?: string | null
@@ -65,12 +74,15 @@ export type Database = {
           excel_url?: string
           formulas?: string
           id?: string
+          logs?: Json
           macros?: Json
           medicacion?: Json
+          medidas?: Json
           meta_agua?: number
           nombre?: string
           objetivo?: string
           ocupacion?: string
+          plan_semanal?: Json
           telefono?: string
           updated_at?: string
           user_id?: string | null

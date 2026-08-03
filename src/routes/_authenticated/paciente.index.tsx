@@ -52,8 +52,14 @@ function PacienteHoy() {
   const saludo = hora < 12 ? "Buenos días" : hora < 19 ? "Buenas tardes" : "Buenas noches";
   const nombreCorto = activePatient.nombre.split(" ").slice(0, 2).join(" ");
 
+  const metaAguaVasos = activePatient.requerimientoHidricoMl
+    ? Math.max(1, Math.round(activePatient.requerimientoHidricoMl / 250))
+    : activePatient.metaAgua || 8;
+
+  const totalHidricoMl = activePatient.requerimientoHidricoMl ?? metaAguaVasos * 250;
+
   const setAgua = (n: number) =>
-    updateLog(activePatient.id, fecha, { agua: Math.max(0, Math.min(20, n)) });
+    updateLog(activePatient.id, fecha, { agua: Math.max(0, Math.min(30, n)) });
 
   return (
     <PatientShell>
@@ -65,11 +71,37 @@ function PacienteHoy() {
         <p className="mt-2 text-lg text-muted-foreground">
           Hoy tiene {bloques.length} tiempos de comida. Vamos paso a paso.
         </p>
+
+        {/* Acceso a Menú en Drive o Encuesta de Frecuencia si existen */}
+        {(activePatient.menuDriveUrl || activePatient.encuestaFrecuenciaUrl) && (
+          <div className="mt-4 flex flex-wrap gap-3">
+            {activePatient.menuDriveUrl && (
+              <a
+                href={activePatient.menuDriveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="tap-target inline-flex items-center gap-2 rounded-2xl bg-primary px-5 py-3 text-lg font-bold text-primary-foreground hover:opacity-90"
+              >
+                Ver Menú Semanal en Documento / Drive
+              </a>
+            )}
+            {activePatient.encuestaFrecuenciaUrl && (
+              <a
+                href={activePatient.encuestaFrecuenciaUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="tap-target inline-flex items-center gap-2 rounded-2xl bg-muted px-5 py-3 text-lg font-bold text-foreground hover:bg-secondary"
+              >
+                Responder Encuesta de Frecuencia de Consumo
+              </a>
+            )}
+          </div>
+        )}
       </header>
+
       <Recordatorios fecha={fecha} />
 
       {/* Comidas */}
-
       <section aria-labelledby="titulo-comidas" className="space-y-4">
         <h2 id="titulo-comidas" className="text-2xl font-extrabold">
           Mi plan de comidas
@@ -150,32 +182,34 @@ function PacienteHoy() {
         </h2>
         <div className="card-float mt-4 p-6">
           <p className="text-xl text-muted-foreground">
-            Meta: {activePatient.metaAgua} vasos al día
+            Requerimiento hídrico: <strong>{totalHidricoMl} mL</strong> ({metaAguaVasos} vasos de 250 mL al día)
           </p>
           <p className="mt-2 text-5xl font-extrabold text-water">
             {log.agua}
             <span className="text-2xl font-bold text-muted-foreground">
               {" "}
-              / {activePatient.metaAgua} vasos
+              / {metaAguaVasos} vasos ({log.agua * 250} mL)
             </span>
           </p>
 
           <div
             className="mt-5 flex flex-wrap gap-3"
             role="img"
-            aria-label={`${log.agua} de ${activePatient.metaAgua} vasos tomados`}
+            aria-label={`${log.agua} de ${metaAguaVasos} vasos tomados`}
           >
-            {Array.from({ length: activePatient.metaAgua }).map((_, i) => (
-              <span
+            {Array.from({ length: metaAguaVasos }).map((_, i) => (
+              <button
                 key={i}
-                className={`flex size-12 items-center justify-center rounded-2xl border-2 ${
+                type="button"
+                onClick={() => setAgua(i + 1)}
+                className={`flex size-12 items-center justify-center rounded-2xl border-2 transition-colors ${
                   i < log.agua
                     ? "border-water bg-water-soft text-water"
-                    : "border-border bg-muted text-muted-foreground"
+                    : "border-border bg-muted text-muted-foreground hover:bg-secondary"
                 }`}
               >
                 <Droplets className="size-6" aria-hidden="true" />
-              </span>
+              </button>
             ))}
           </div>
 
@@ -195,7 +229,7 @@ function PacienteHoy() {
               className="tap-target flex flex-[2] items-center justify-center gap-3 rounded-2xl bg-water text-xl font-extrabold text-primary-foreground hover:opacity-90"
             >
               <Plus className="size-8" aria-hidden="true" />
-              Tomé un vaso
+              Tomé un vaso (250 mL)
             </button>
           </div>
         </div>

@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Activity, Plus, Trash2 } from "lucide-react";
 
 import { isoDate, useStore, type Actividad } from "@/lib/store";
+import { META_ACTIVIDAD_SEMANAL_MIN } from "@/lib/constants";
 
 const field =
   "mt-1 w-full rounded-xl border border-border bg-card px-4 py-3 text-base focus:border-primary focus:outline-none";
@@ -11,8 +12,8 @@ export function ActividadFisica() {
   const { activePatient, addActividad, removeActividad } = useStore();
   const [form, setForm] = useState<Omit<Actividad, "id">>({
     fecha: isoDate(new Date()),
-    tipo: "Caminata",
-    minutos: 30,
+    tipo: "",
+    minutos: 0,
     intensidad: "Baja",
     notas: "",
   });
@@ -22,7 +23,7 @@ export function ActividadFisica() {
     desde.setDate(desde.getDate() - 7);
     const semana = activePatient.actividades.filter((a) => new Date(a.fecha) >= desde);
     const minutos = semana.reduce((s, a) => s + a.minutos, 0);
-    return { sesiones: semana.length, minutos, meta: 150 };
+    return { sesiones: semana.length, minutos, meta: META_ACTIVIDAD_SEMANAL_MIN };
   }, [activePatient.actividades]);
 
   const registrar = (e: React.FormEvent) => {
