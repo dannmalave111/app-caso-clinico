@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
+  Activity,
   ArrowLeft,
+  ClipboardList,
   MessageCircle,
   Plus,
   Ruler,
@@ -12,15 +14,6 @@ import {
   History,
 } from "lucide-react";
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import {
   BRISTOL,
   MEAL_ORDER,
   WEEKDAYS,
@@ -30,6 +23,10 @@ import {
   type MealType,
 } from "@/lib/store";
 import { RegistroPacientes } from "@/components/RegistroPacientes";
+import { FichaClinica } from "@/components/nutri/FichaClinica";
+import { ActividadFisica } from "@/components/nutri/ActividadFisica";
+import { AntropometriaPanel } from "@/components/nutri/AntropometriaPanel";
+
 
 export const Route = createFileRoute("/_authenticated/nutricionista")({
   head: () => ({
