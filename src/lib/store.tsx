@@ -32,6 +32,8 @@ export type DailyLog = {
   completados: string[];
   agua: number;
   bristol: number | null;
+  orina: number | null;
+  medicacionTomada: string[];
   nota: string;
 };
 
@@ -40,7 +42,26 @@ export type Measurement = {
   peso: number;
   cintura: number;
   cadera: number;
+  bicipital: number;
+  abdominal: number;
+  musloMedio: number;
+  pantorrilla: number;
+  pliegueTricipital: number;
+  pliegueSubescapular: number;
 };
+
+export type Medicamento = { id: string; tipo: string; gramaje: string; horario: string };
+
+export type Actividad = {
+  id: string;
+  fecha: string;
+  tipo: string;
+  minutos: number;
+  intensidad: "Baja" | "Media" | "Alta";
+  notas: string;
+};
+
+export type Macros = { ch: number; pr: number; lp: number };
 
 export type Patient = {
   id: string;
@@ -49,10 +70,19 @@ export type Patient = {
   telefono: string;
   objetivo: string;
   metaAgua: number;
+  estadoCivil: string;
+  ocupacion: string;
+  diagnostico: string;
+  medicacion: Medicamento[];
+  formulas: string;
+  excelUrl: string;
+  macros: Macros;
+  actividades: Actividad[];
   plan: DayPlan;
   logs: Record<string, DailyLog>;
   medidas: Measurement[];
 };
+
 
 export const WEEKDAYS = [
   "Domingo",
