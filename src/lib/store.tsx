@@ -146,7 +146,7 @@ export type PatientSeed = {
   edad: number;
   telefono: string;
   objetivo: string;
-  metaAgua: number;
+  metaAgua?: number;
 } & Partial<
   Pick<
     Patient,
@@ -194,6 +194,7 @@ function dbRowToPatient(row: Record<string, any>): Patient {
 function patientFromSeed(info: PatientSeed): Patient {
   return {
     ...info,
+    metaAgua: info.metaAgua ?? 8,
     estadoCivil: info.estadoCivil ?? "",
     ocupacion: info.ocupacion ?? "",
     diagnostico: info.diagnostico ?? "",

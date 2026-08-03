@@ -16,11 +16,10 @@ type Fila = {
   edad: number;
   telefono: string;
   objetivo: string;
-  meta_agua: number;
   codigo: string;
 };
 
-const vacio = { nombre: "", edad: "", telefono: "", objetivo: "", metaAgua: "" };
+const vacio = { nombre: "", edad: "", telefono: "", objetivo: "" };
 
 export function RegistroPacientes() {
   const { ensurePatient } = useStore();
@@ -31,7 +30,7 @@ export function RegistroPacientes() {
   const cargar = async () => {
     const { data } = await supabase
       .from("patients")
-      .select("id, nombre, edad, telefono, objetivo, meta_agua, codigo")
+      .select("id, nombre, edad, telefono, objetivo, codigo")
       .order("created_at", { ascending: false });
     setFilas((data as Fila[]) ?? []);
   };
@@ -47,7 +46,6 @@ export function RegistroPacientes() {
       edad: Number(form.edad),
       telefono: form.telefono,
       objetivo: form.objetivo,
-      metaAgua: Number(form.metaAgua),
     });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Revise los datos");
@@ -63,7 +61,6 @@ export function RegistroPacientes() {
           edad: parsed.data.edad,
           telefono: parsed.data.telefono,
           objetivo: parsed.data.objetivo,
-          metaAgua: parsed.data.metaAgua,
         },
         false,
       );
@@ -110,31 +107,17 @@ export function RegistroPacientes() {
               className="h-12 rounded-xl"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="r-edad" className="font-bold">Edad</Label>
-              <Input
-                id="r-edad"
-                type="number"
-                min={1}
-                max={120}
-                value={form.edad}
-                onChange={(e) => setForm({ ...form, edad: e.target.value })}
-                className="h-12 rounded-xl"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="r-agua" className="font-bold">Meta de vasos</Label>
-              <Input
-                id="r-agua"
-                type="number"
-                min={1}
-                max={20}
-                value={form.metaAgua}
-                onChange={(e) => setForm({ ...form, metaAgua: e.target.value })}
-                className="h-12 rounded-xl"
-              />
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="r-edad" className="font-bold">Edad</Label>
+            <Input
+              id="r-edad"
+              type="number"
+              min={1}
+              max={120}
+              value={form.edad}
+              onChange={(e) => setForm({ ...form, edad: e.target.value })}
+              className="h-12 rounded-xl"
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="r-tel" className="font-bold">WhatsApp (con código país)</Label>
@@ -181,7 +164,7 @@ export function RegistroPacientes() {
                 <div className="min-w-0 flex-1">
                   <p className="truncate text-lg font-bold">{f.nombre}</p>
                   <p className="truncate text-sm text-muted-foreground">
-                    {f.edad} años · {f.objetivo || "Sin objetivo"} · {f.meta_agua} vasos
+                    {f.edad} años · {f.objetivo || "Sin objetivo"}
                   </p>
                 </div>
                 <button

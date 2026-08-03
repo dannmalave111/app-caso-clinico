@@ -12,7 +12,6 @@ export const registroSchema = z.object({
     .max(20)
     .regex(/^[0-9+\s-]*$/, "Teléfono inválido"),
   objetivo: z.string().trim().max(200),
-  metaAgua: z.number().int().min(1).max(20),
 });
 
 export type RegistroInput = z.infer<typeof registroSchema>;

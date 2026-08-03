@@ -249,7 +249,7 @@ export function FichaClinica() {
             </div>
             <div>
               <label className={label} htmlFor="tieneHijos">
-                ¿Possence hijos?
+                ¿Posee hijos?
               </label>
               <select
                 id="tieneHijos"

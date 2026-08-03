@@ -127,7 +127,6 @@ export const registerPatient = createServerFn({ method: "POST" })
         edad: data.edad,
         telefono: data.telefono,
         objetivo: data.objetivo,
-        meta_agua: data.metaAgua,
         codigo,
         created_by: context.userId,
       })
