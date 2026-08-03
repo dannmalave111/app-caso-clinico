@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { patientEmail, patientPassword, registroSchema } from "@/lib/patients.shared";
+import { clinicoSchema, patientEmail, patientPassword, registroSchema } from "@/lib/patients.shared";
 import { assertNutricionista } from "@/lib/patients.server";
 
 /** Marca al usuario recién registrado como nutricionista si aún no tiene rol. */
@@ -106,5 +106,28 @@ export const deletePatient = createServerFn({ method: "POST" })
       await supabaseAdmin.from("user_roles").delete().eq("user_id", patient.user_id);
       await supabaseAdmin.auth.admin.deleteUser(patient.user_id);
     }
+    return { ok: true };
+  });
+
+/** Guarda los datos sociodemográficos y clínicos editables del paciente. */
+export const updatePatientClinico = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: unknown) => clinicoSchema.parse(input))
+  .handler(async ({ data, context }) => {
+    await assertNutricionista(context);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("patients")
+      .update({
+        estado_civil: data.estadoCivil,
+        ocupacion: data.ocupacion,
+        diagnostico: data.diagnostico,
+        medicacion: data.medicacion,
+        formulas: data.formulas,
+        excel_url: data.excelUrl,
+        macros: data.macros,
+      })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
     return { ok: true };
   });

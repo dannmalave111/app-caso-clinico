@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
+  Activity,
   ArrowLeft,
+  ClipboardList,
   MessageCircle,
   Plus,
   Ruler,
@@ -12,15 +14,6 @@ import {
   History,
 } from "lucide-react";
 import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
-import {
   BRISTOL,
   MEAL_ORDER,
   WEEKDAYS,
@@ -30,6 +23,10 @@ import {
   type MealType,
 } from "@/lib/store";
 import { RegistroPacientes } from "@/components/RegistroPacientes";
+import { FichaClinica } from "@/components/nutri/FichaClinica";
+import { ActividadFisica } from "@/components/nutri/ActividadFisica";
+import { AntropometriaPanel } from "@/components/nutri/AntropometriaPanel";
+
 
 export const Route = createFileRoute("/_authenticated/nutricionista")({
   head: () => ({
@@ -50,7 +47,14 @@ export const Route = createFileRoute("/_authenticated/nutricionista")({
   component: Dashboard,
 });
 
-type Tab = "pacientes" | "registro" | "menu" | "medidas" | "timeline";
+type Tab =
+  | "pacientes"
+  | "registro"
+  | "ficha"
+  | "menu"
+  | "medidas"
+  | "actividad"
+  | "timeline";
 
 function Dashboard() {
   const { patients, activePatient, setActivePatientId } = useStore();
@@ -59,10 +63,13 @@ function Dashboard() {
   const tabs: { id: Tab; label: string; icon: typeof Users }[] = [
     { id: "pacientes", label: "Pacientes", icon: Users },
     { id: "registro", label: "Registro y accesos", icon: UserPlus },
+    { id: "ficha", label: "Ficha clínica", icon: ClipboardList },
     { id: "menu", label: "Menú semanal", icon: UtensilsCrossed },
     { id: "medidas", label: "Antropometría", icon: Ruler },
+    { id: "actividad", label: "Actividad física", icon: Activity },
     { id: "timeline", label: "Timeline", icon: History },
   ];
+
 
   return (
     <div className="min-h-dvh bg-background">
@@ -119,9 +126,12 @@ function Dashboard() {
       <main className="mx-auto w-full max-w-7xl px-6 py-8">
         {tab === "pacientes" && <TablaPacientes />}
         {tab === "registro" && <RegistroPacientes />}
+        {tab === "ficha" && <FichaClinica />}
         {tab === "menu" && <EditorMenu />}
-        {tab === "medidas" && <Antropometria />}
+        {tab === "medidas" && <AntropometriaPanel />}
+        {tab === "actividad" && <ActividadFisica />}
         {tab === "timeline" && <Timeline />}
+
       </main>
 
       <a
@@ -334,157 +344,8 @@ function EditorMenu() {
   );
 }
 
-function Antropometria() {
-  const { activePatient, addMeasurement } = useStore();
-  const [peso, setPeso] = useState("");
-  const [cintura, setCintura] = useState("");
-  const [cadera, setCadera] = useState("");
 
-  const medidas = activePatient.medidas;
-  const ultima = medidas[medidas.length - 1];
-  const previa = medidas[medidas.length - 2];
 
-  const delta = (a?: number, b?: number) =>
-    a !== undefined && b !== undefined ? Number((a - b).toFixed(1)) : 0;
-
-  const promedioCambio = useMemo(() => {
-    if (medidas.length < 2) return 0;
-    const total = (ultima?.peso ?? 0) - (medidas[0]?.peso ?? 0);
-    return Number((total / (medidas.length - 1)).toFixed(2));
-  }, [medidas, ultima]);
-
-  const registrar = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!peso) return;
-    addMeasurement(activePatient.id, {
-      fecha: isoDate(new Date()),
-      peso: Number(peso),
-      cintura: Number(cintura || ultima?.cintura || 0),
-      cadera: Number(cadera || ultima?.cadera || 0),
-    });
-    setPeso("");
-    setCintura("");
-    setCadera("");
-  };
-
-  const cards = [
-    { label: "Peso actual", value: `${ultima?.peso?.toFixed(1) ?? "—"} kg`, delta: delta(ultima?.peso, previa?.peso), unidad: "kg" },
-    { label: "Cintura", value: `${ultima?.cintura ?? "—"} cm`, delta: delta(ultima?.cintura, previa?.cintura), unidad: "cm" },
-    { label: "Cadera", value: `${ultima?.cadera ?? "—"} cm`, delta: delta(ultima?.cadera, previa?.cadera), unidad: "cm" },
-  ];
-
-  return (
-    <section>
-      <h2 className="text-2xl font-extrabold">Seguimiento antropométrico</h2>
-      <p className="text-muted-foreground">
-        Cambio promedio por consulta: <strong>{promedioCambio} kg</strong>
-      </p>
-
-      <div className="mt-5 grid gap-4 sm:grid-cols-3">
-        {cards.map((c) => (
-          <div key={c.label} className="card-float p-6">
-            <p className="text-sm font-bold uppercase text-muted-foreground">{c.label}</p>
-            <p className="mt-2 text-3xl font-extrabold">{c.value}</p>
-            <p
-              className={`mt-1 text-base font-bold ${
-                c.delta < 0 ? "text-primary" : c.delta > 0 ? "text-destructive" : "text-muted-foreground"
-              }`}
-            >
-              {c.delta > 0 ? "+" : ""}
-              {c.delta} {c.unidad} vs. consulta anterior
-            </p>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_1.2fr]">
-        <form onSubmit={registrar} className="card-float p-6">
-          <h3 className="text-xl font-extrabold">Nueva medición</h3>
-          <div className="mt-4 space-y-4">
-            <div>
-              <label htmlFor="peso" className="block text-sm font-bold text-muted-foreground">
-                Peso (kg)
-              </label>
-              <input
-                id="peso"
-                type="number"
-                step="0.1"
-                value={peso}
-                onChange={(e) => setPeso(e.target.value)}
-                required
-                className="mt-1 w-full rounded-xl border border-border bg-card px-4 py-3 text-base focus:border-primary focus:outline-none"
-              />
-            </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <label htmlFor="cintura" className="block text-sm font-bold text-muted-foreground">
-                  Cintura (cm)
-                </label>
-                <input
-                  id="cintura"
-                  type="number"
-                  value={cintura}
-                  onChange={(e) => setCintura(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-border bg-card px-4 py-3 text-base focus:border-primary focus:outline-none"
-                />
-              </div>
-              <div>
-                <label htmlFor="cadera" className="block text-sm font-bold text-muted-foreground">
-                  Cadera (cm)
-                </label>
-                <input
-                  id="cadera"
-                  type="number"
-                  value={cadera}
-                  onChange={(e) => setCadera(e.target.value)}
-                  className="mt-1 w-full rounded-xl border border-border bg-card px-4 py-3 text-base focus:border-primary focus:outline-none"
-                />
-              </div>
-            </div>
-            <button
-              type="submit"
-              className="w-full rounded-xl bg-primary px-4 py-3 font-bold text-primary-foreground hover:opacity-90"
-            >
-              Guardar medición
-            </button>
-          </div>
-        </form>
-
-        <div className="card-float p-6">
-          <h3 className="text-xl font-extrabold">Evolución de peso</h3>
-          <div className="mt-4 h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart
-                data={medidas.map((m) => ({
-                  fecha: new Date(m.fecha).toLocaleDateString("es-MX", {
-                    day: "2-digit",
-                    month: "short",
-                  }),
-                  peso: m.peso,
-                }))}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
-              >
-                <CartesianGrid strokeDasharray="4 4" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="fecha" tick={{ fontSize: 13 }} axisLine={false} tickLine={false} />
-                <YAxis domain={["dataMin - 3", "dataMax + 2"]} tick={{ fontSize: 13 }} axisLine={false} tickLine={false} />
-                <Tooltip
-                  contentStyle={{
-                    borderRadius: 16,
-                    border: "1px solid var(--border)",
-                    background: "var(--card)",
-                    color: "var(--foreground)",
-                  }}
-                  formatter={(v: number) => [`${v} kg`, "Peso"]}
-                />
-                <Bar dataKey="peso" fill="var(--primary)" radius={[10, 10, 0, 0]} barSize={40} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
 function Timeline() {
   const { activePatient, getLog } = useStore();

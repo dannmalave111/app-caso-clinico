@@ -19,11 +19,18 @@ export type Database = {
           codigo: string
           created_at: string
           created_by: string | null
+          diagnostico: string
           edad: number
+          estado_civil: string
+          excel_url: string
+          formulas: string
           id: string
+          macros: Json
+          medicacion: Json
           meta_agua: number
           nombre: string
           objetivo: string
+          ocupacion: string
           telefono: string
           updated_at: string
           user_id: string | null
@@ -32,11 +39,18 @@ export type Database = {
           codigo: string
           created_at?: string
           created_by?: string | null
+          diagnostico?: string
           edad?: number
+          estado_civil?: string
+          excel_url?: string
+          formulas?: string
           id?: string
+          macros?: Json
+          medicacion?: Json
           meta_agua?: number
           nombre: string
           objetivo?: string
+          ocupacion?: string
           telefono?: string
           updated_at?: string
           user_id?: string | null
@@ -45,11 +59,18 @@ export type Database = {
           codigo?: string
           created_at?: string
           created_by?: string | null
+          diagnostico?: string
           edad?: number
+          estado_civil?: string
+          excel_url?: string
+          formulas?: string
           id?: string
+          macros?: Json
+          medicacion?: Json
           meta_agua?: number
           nombre?: string
           objetivo?: string
+          ocupacion?: string
           telefono?: string
           updated_at?: string
           user_id?: string | null

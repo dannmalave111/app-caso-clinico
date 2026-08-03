@@ -32,6 +32,8 @@ export type DailyLog = {
   completados: string[];
   agua: number;
   bristol: number | null;
+  orina: number | null;
+  medicacionTomada: string[];
   nota: string;
 };
 
@@ -40,7 +42,26 @@ export type Measurement = {
   peso: number;
   cintura: number;
   cadera: number;
+  bicipital: number;
+  abdominal: number;
+  musloMedio: number;
+  pantorrilla: number;
+  pliegueTricipital: number;
+  pliegueSubescapular: number;
 };
+
+export type Medicamento = { id: string; tipo: string; gramaje: string; horario: string };
+
+export type Actividad = {
+  id: string;
+  fecha: string;
+  tipo: string;
+  minutos: number;
+  intensidad: "Baja" | "Media" | "Alta";
+  notas: string;
+};
+
+export type Macros = { ch: number; pr: number; lp: number };
 
 export type Patient = {
   id: string;
@@ -49,10 +70,19 @@ export type Patient = {
   telefono: string;
   objetivo: string;
   metaAgua: number;
+  estadoCivil: string;
+  ocupacion: string;
+  diagnostico: string;
+  medicacion: Medicamento[];
+  formulas: string;
+  excelUrl: string;
+  macros: Macros;
+  actividades: Actividad[];
   plan: DayPlan;
   logs: Record<string, DailyLog>;
   medidas: Measurement[];
 };
+
 
 export const WEEKDAYS = [
   "Domingo",
@@ -75,8 +105,24 @@ export function daysAgo(n: number) {
 }
 
 export function emptyLog(): DailyLog {
-  return { completados: [], agua: 0, bristol: null, nota: "" };
+  return { completados: [], agua: 0, bristol: null, orina: null, medicacionTomada: [], nota: "" };
 }
+
+export function emptyMeasurement(fecha: string): Measurement {
+  return {
+    fecha,
+    peso: 0,
+    cintura: 0,
+    cadera: 0,
+    bicipital: 0,
+    abdominal: 0,
+    musloMedio: 0,
+    pantorrilla: 0,
+    pliegueTricipital: 0,
+    pliegueSubescapular: 0,
+  };
+}
+
 
 let seq = 0;
 const uid = (p: string) => `${p}-${Date.now().toString(36)}-${(seq++).toString(36)}`;
@@ -125,8 +171,11 @@ function seedLogs(metaAgua: number, adherencia: number, plan: DayPlan): Record<s
       completados: blocks.slice(0, n).map((b) => b.id),
       agua: cumple ? metaAgua : Math.max(2, metaAgua - 3),
       bristol: 3 + Math.floor(Math.random() * 2),
+      orina: cumple ? 1 + Math.floor(Math.random() * 2) : 3 + Math.floor(Math.random() * 2),
+      medicacionTomada: [],
       nota: i % 4 === 0 ? "Me sentí con más energía hoy." : "",
     };
+
   }
   return logs;
 }
@@ -148,12 +197,41 @@ function makePatient(
     telefono,
     objetivo,
     metaAgua,
+    estadoCivil: "Viudo(a)",
+    ocupacion: "Jubilado(a)",
+    diagnostico: "Hipertensión arterial controlada",
+    medicacion: [
+      { id: uid("med"), tipo: "Losartán", gramaje: "50 mg", horario: "08:00" },
+      { id: uid("med"), tipo: "Metformina", gramaje: "850 mg", horario: "14:00" },
+    ],
+    formulas:
+      "Harris-Benedict (GEB) × factor de actividad 1.3\nDistribución: CH 50% · Pr 20% · Lp 30%",
+    excelUrl: "",
+    macros: { ch: 50, pr: 20, lp: 30 },
+    actividades: [
+      {
+        id: uid("act"),
+        fecha: isoDate(daysAgo(2)),
+        tipo: "Caminata",
+        minutos: 30,
+        intensidad: "Baja",
+        notas: "Caminata en el parque, sin molestias.",
+      },
+      {
+        id: uid("act"),
+        fecha: isoDate(daysAgo(5)),
+        tipo: "Ejercicios de fuerza suave",
+        minutos: 20,
+        intensidad: "Media",
+        notas: "Bandas elásticas en casa.",
+      },
+    ],
     plan,
     logs: seedLogs(metaAgua, adherencia, plan),
     medidas: [
-      { fecha: isoDate(daysAgo(60)), peso: pesoBase + 2.8, cintura: 98, cadera: 106 },
-      { fecha: isoDate(daysAgo(30)), peso: pesoBase + 1.4, cintura: 96, cadera: 105 },
-      { fecha: isoDate(daysAgo(7)), peso: pesoBase, cintura: 94, cadera: 104 },
+      { ...emptyMeasurement(isoDate(daysAgo(60))), peso: pesoBase + 2.8, cintura: 98, cadera: 106, bicipital: 30, abdominal: 100, musloMedio: 52, pantorrilla: 35, pliegueTricipital: 22, pliegueSubescapular: 24 },
+      { ...emptyMeasurement(isoDate(daysAgo(30))), peso: pesoBase + 1.4, cintura: 96, cadera: 105, bicipital: 29.5, abdominal: 98, musloMedio: 51, pantorrilla: 34.5, pliegueTricipital: 21, pliegueSubescapular: 23 },
+      { ...emptyMeasurement(isoDate(daysAgo(7))), peso: pesoBase, cintura: 94, cadera: 104, bicipital: 29, abdominal: 96, musloMedio: 50, pantorrilla: 34, pliegueTricipital: 20, pliegueSubescapular: 22 },
     ],
   };
 }
@@ -173,21 +251,51 @@ export type PatientSeed = {
   telefono: string;
   objetivo: string;
   metaAgua: number;
-};
+} & Partial<
+  Pick<
+    Patient,
+    "estadoCivil" | "ocupacion" | "diagnostico" | "medicacion" | "formulas" | "excelUrl" | "macros"
+  >
+>;
 
 function patientFromSeed(info: PatientSeed): Patient {
   return {
-    id: info.id,
-    nombre: info.nombre,
-    edad: info.edad,
-    telefono: info.telefono,
-    objetivo: info.objetivo,
-    metaAgua: info.metaAgua,
+    ...info,
+    estadoCivil: info.estadoCivil ?? "",
+    ocupacion: info.ocupacion ?? "",
+    diagnostico: info.diagnostico ?? "",
+    medicacion: info.medicacion ?? [],
+    formulas: info.formulas ?? "",
+    excelUrl: info.excelUrl ?? "",
+    macros: info.macros ?? { ch: 50, pr: 20, lp: 30 },
+    actividades: [],
     plan: planBase(),
     logs: {},
     medidas: [],
   };
 }
+
+/** Rellena campos nuevos en datos guardados con versiones anteriores. */
+function normalizePatient(p: Patient): Patient {
+  const logs: Record<string, DailyLog> = {};
+  Object.entries(p.logs ?? {}).forEach(([k, v]) => {
+    logs[k] = { ...emptyLog(), ...v };
+  });
+  return {
+    ...p,
+    estadoCivil: p.estadoCivil ?? "",
+    ocupacion: p.ocupacion ?? "",
+    diagnostico: p.diagnostico ?? "",
+    medicacion: p.medicacion ?? [],
+    formulas: p.formulas ?? "",
+    excelUrl: p.excelUrl ?? "",
+    macros: p.macros ?? { ch: 50, pr: 20, lp: 30 },
+    actividades: p.actividades ?? [],
+    medidas: (p.medidas ?? []).map((m) => ({ ...emptyMeasurement(m.fecha), ...m })),
+    logs,
+  };
+}
+
 
 type Store = {
   patients: Patient[];
@@ -201,8 +309,13 @@ type Store = {
   addBlock: (patientId: string, day: string, tipo: MealType) => void;
   removeBlock: (patientId: string, day: string, blockId: string) => void;
   addMeasurement: (patientId: string, m: Measurement) => void;
+  removeMeasurement: (patientId: string, fecha: string) => void;
   setMetaAgua: (patientId: string, meta: number) => void;
+  updatePatient: (patientId: string, patch: Partial<Patient>) => void;
+  addActividad: (patientId: string, a: Omit<Actividad, "id">) => void;
+  removeActividad: (patientId: string, id: string) => void;
   ensurePatient: (info: PatientSeed, activar?: boolean) => void;
+
 };
 
 const StoreContext = createContext<Store | null>(null);
@@ -219,7 +332,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (raw) {
         const parsed = JSON.parse(raw) as Patient[];
         if (Array.isArray(parsed) && parsed.length) {
-          setPatients(parsed);
+          setPatients(parsed.map(normalizePatient));
           setActivePatientId(parsed[0]!.id);
           setHydrated(true);
           return;
@@ -297,9 +410,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       addMeasurement: (patientId, m) =>
         update(patientId, (p) => ({
           ...p,
-          medidas: [...p.medidas, m].sort((a, b) => a.fecha.localeCompare(b.fecha)),
+          medidas: [...p.medidas.filter((x) => x.fecha !== m.fecha), m].sort((a, b) =>
+            a.fecha.localeCompare(b.fecha),
+          ),
         })),
+      removeMeasurement: (patientId, fecha) =>
+        update(patientId, (p) => ({ ...p, medidas: p.medidas.filter((m) => m.fecha !== fecha) })),
       setMetaAgua: (patientId, meta) => update(patientId, (p) => ({ ...p, metaAgua: meta })),
+      updatePatient: (patientId, patch) => update(patientId, (p) => ({ ...p, ...patch })),
+      addActividad: (patientId, a) =>
+        update(patientId, (p) => ({
+          ...p,
+          actividades: [{ ...a, id: uid("act") }, ...p.actividades],
+        })),
+      removeActividad: (patientId, id) =>
+        update(patientId, (p) => ({
+          ...p,
+          actividades: p.actividades.filter((a) => a.id !== id),
+        })),
+
       ensurePatient: (info, activar = true) => {
         setPatients((prev) =>
           prev.some((p) => p.id === info.id)
@@ -329,3 +458,21 @@ export const BRISTOL = [
   { n: 6, label: "Trozos deshechos", desc: "Blanda" },
   { n: 7, label: "Totalmente líquida", desc: "Diarrea" },
 ];
+
+export const ORINA = [
+  { n: 1, color: "#F7F3C8", label: "Muy clara", desc: "Hidratación excelente" },
+  { n: 2, color: "#F3EA9E", label: "Clara", desc: "Buena hidratación" },
+  { n: 3, color: "#EFDF6B", label: "Amarillo pálido", desc: "Hidratación normal" },
+  { n: 4, color: "#E8CF3C", label: "Amarillo", desc: "Tome un vaso de agua" },
+  { n: 5, color: "#D9B31F", label: "Amarillo oscuro", desc: "Falta de agua" },
+  { n: 6, color: "#BF8C14", label: "Ámbar", desc: "Deshidratación" },
+  { n: 7, color: "#9A650E", label: "Café claro", desc: "Avise a su nutricionista" },
+];
+
+export const MEAL_TIMES: Record<MealType, string> = {
+  Desayuno: "08:00",
+  "Media mañana": "11:00",
+  Almuerzo: "14:00",
+  Merienda: "17:00",
+  Cena: "20:00",
+};
