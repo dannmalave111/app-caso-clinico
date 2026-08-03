@@ -70,6 +70,7 @@ function Dashboard() {
     { id: "timeline", label: "Timeline", icon: History },
   ];
 
+  const noPacientes = patients.length === 0;
 
   return (
     <div className="min-h-dvh bg-background">
@@ -92,9 +93,10 @@ function Dashboard() {
           </div>
           <select
             aria-label="Paciente seleccionado"
-            value={activePatient.id}
+            value={activePatient?.id ?? ""}
             onChange={(e) => setActivePatientId(e.target.value)}
             className="h-11 rounded-xl border border-border bg-card px-3 text-base font-semibold"
+            disabled={noPacientes}
           >
             {patients.map((p) => (
               <option key={p.id} value={p.id}>
@@ -124,25 +126,46 @@ function Dashboard() {
       </header>
 
       <main className="mx-auto w-full max-w-7xl px-6 py-8 pb-24 sm:pb-8">
-        {tab === "pacientes" && <TablaPacientes />}
-        {tab === "registro" && <RegistroPacientes />}
-        {tab === "ficha" && <FichaClinica />}
-        {tab === "menu" && <EditorMenu />}
-        {tab === "medidas" && <AntropometriaPanel />}
-        {tab === "actividad" && <ActividadFisica />}
-        {tab === "timeline" && <Timeline />}
-
+        {noPacientes ? (
+          <div className="card-float p-10 text-center">
+            <UserPlus className="mx-auto size-12 text-muted-foreground" aria-hidden="true" />
+            <h2 className="mt-4 text-2xl font-extrabold">No hay pacientes registrados</h2>
+            <p className="mt-2 text-muted-foreground">
+              Registre su primer paciente para comenzar a gestionar fichas, menús y seguimientos.
+            </p>
+            <button
+              type="button"
+              onClick={() => setTab("registro")}
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 font-bold text-primary-foreground hover:opacity-90"
+            >
+              <UserPlus className="size-5" aria-hidden="true" />
+              Registrar paciente
+            </button>
+          </div>
+        ) : (
+          <>
+            {tab === "pacientes" && <TablaPacientes />}
+            {tab === "registro" && <RegistroPacientes />}
+            {tab === "ficha" && <FichaClinica />}
+            {tab === "menu" && <EditorMenu />}
+            {tab === "medidas" && <AntropometriaPanel />}
+            {tab === "actividad" && <ActividadFisica />}
+            {tab === "timeline" && <Timeline />}
+          </>
+        )}
       </main>
 
-      <a
-        href={`https://wa.me/${activePatient.telefono}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="fixed bottom-20 right-6 z-40 flex items-center gap-3 rounded-full bg-primary px-6 py-4 text-lg font-extrabold text-primary-foreground shadow-[var(--shadow-float)] transition-transform hover:-translate-y-0.5 max-sm:px-4 max-sm:py-3 max-sm:text-base"
-      >
-        <MessageCircle className="size-6" aria-hidden="true" />
-        WhatsApp
-      </a>
+      {activePatient && (
+        <a
+          href={`https://wa.me/${activePatient.telefono}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-20 right-6 z-40 flex items-center gap-3 rounded-full bg-primary px-6 py-4 text-lg font-extrabold text-primary-foreground shadow-[var(--shadow-float)] transition-transform hover:-translate-y-0.5 max-sm:px-4 max-sm:py-3 max-sm:text-base"
+        >
+          <MessageCircle className="size-6" aria-hidden="true" />
+          WhatsApp
+        </a>
+      )}
     </div>
   );
 }
@@ -184,7 +207,7 @@ function TablaPacientes() {
             {patients.map((p) => {
               const adh = adherenciaSemanal(getLog, p.id, p.plan);
               const peso = p.medidas[p.medidas.length - 1]?.peso ?? 0;
-              const activo = p.id === activePatient.id;
+              const activo = p.id === activePatient?.id;
               return (
                 <tr
                   key={p.id}
