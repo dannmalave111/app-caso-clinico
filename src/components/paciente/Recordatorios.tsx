@@ -26,7 +26,7 @@ export function Recordatorios({ fecha }: { fecha: string }) {
     (a, b) => MEAL_ORDER.indexOf(a.tipo) - MEAL_ORDER.indexOf(b.tipo),
   );
 
-  const items: Recordatorio[] = [
+  const items: Recordatorio[] = ([
     ...bloques.map((b) => ({
       id: `comida-${b.id}`,
       hora: MEAL_TIMES[b.tipo],
@@ -62,7 +62,7 @@ export function Recordatorios({ fecha }: { fecha: string }) {
           agua: Math.min(20, log.agua + 1),
         }),
     },
-  ].sort((a, b) => a.hora.localeCompare(b.hora));
+  ] as Recordatorio[]).sort((a, b) => a.hora.localeCompare(b.hora));
 
   const pendientes = items.filter((i) => !i.hecho).length;
 
