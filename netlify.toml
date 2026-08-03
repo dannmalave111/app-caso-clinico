@@ -1,32 +1,9 @@
 # Netlify configuration for TanStack Start + Nitro SSR app
-# Docs: https://docs.netlify.com/configure-builds/file-based-configuration/
+# Nitro (netlify preset) handles function routing automatically.
 
 [build]
-  # Build command uses the Vite/Nitro pipeline
   command = "npm run build"
-  # Nitro (netlify preset) outputs static assets here
-  publish = ".output/public"
+  publish = "dist"
 
-[functions]
-  # Nitro generates the SSR serverless function here
-  directory = ".netlify/functions-internal"
-
-# SPA redirect: send all routes to the SSR serverless function
-# Nitro handles routing internally
-[[redirects]]
-  from = "/*"
-  to = "/.netlify/functions-internal/server"
-  status = 200
-
-# Headers for security and performance
-[[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
-
-[[headers]]
-  for = "/assets/*"
-  [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+# Nitro generates its own _headers and _redirects files in dist/.
+# Do NOT add manual redirects/headers here or they will conflict.
