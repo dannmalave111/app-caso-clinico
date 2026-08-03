@@ -47,7 +47,14 @@ export const Route = createFileRoute("/_authenticated/nutricionista")({
   component: Dashboard,
 });
 
-type Tab = "pacientes" | "registro" | "menu" | "medidas" | "timeline";
+type Tab =
+  | "pacientes"
+  | "registro"
+  | "ficha"
+  | "menu"
+  | "medidas"
+  | "actividad"
+  | "timeline";
 
 function Dashboard() {
   const { patients, activePatient, setActivePatientId } = useStore();
@@ -56,10 +63,13 @@ function Dashboard() {
   const tabs: { id: Tab; label: string; icon: typeof Users }[] = [
     { id: "pacientes", label: "Pacientes", icon: Users },
     { id: "registro", label: "Registro y accesos", icon: UserPlus },
+    { id: "ficha", label: "Ficha clínica", icon: ClipboardList },
     { id: "menu", label: "Menú semanal", icon: UtensilsCrossed },
     { id: "medidas", label: "Antropometría", icon: Ruler },
+    { id: "actividad", label: "Actividad física", icon: Activity },
     { id: "timeline", label: "Timeline", icon: History },
   ];
+
 
   return (
     <div className="min-h-dvh bg-background">
@@ -116,9 +126,12 @@ function Dashboard() {
       <main className="mx-auto w-full max-w-7xl px-6 py-8">
         {tab === "pacientes" && <TablaPacientes />}
         {tab === "registro" && <RegistroPacientes />}
+        {tab === "ficha" && <FichaClinica />}
         {tab === "menu" && <EditorMenu />}
-        {tab === "medidas" && <Antropometria />}
+        {tab === "medidas" && <AntropometriaPanel />}
+        {tab === "actividad" && <ActividadFisica />}
         {tab === "timeline" && <Timeline />}
+
       </main>
 
       <a
