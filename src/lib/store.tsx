@@ -458,3 +458,21 @@ export const BRISTOL = [
   { n: 6, label: "Trozos deshechos", desc: "Blanda" },
   { n: 7, label: "Totalmente líquida", desc: "Diarrea" },
 ];
+
+export const ORINA = [
+  { n: 1, color: "#F7F3C8", label: "Muy clara", desc: "Hidratación excelente" },
+  { n: 2, color: "#F3EA9E", label: "Clara", desc: "Buena hidratación" },
+  { n: 3, color: "#EFDF6B", label: "Amarillo pálido", desc: "Hidratación normal" },
+  { n: 4, color: "#E8CF3C", label: "Amarillo", desc: "Tome un vaso de agua" },
+  { n: 5, color: "#D9B31F", label: "Amarillo oscuro", desc: "Falta de agua" },
+  { n: 6, color: "#BF8C14", label: "Ámbar", desc: "Deshidratación" },
+  { n: 7, color: "#9A650E", label: "Café claro", desc: "Avise a su nutricionista" },
+];
+
+export const MEAL_TIMES: Record<MealType, string> = {
+  Desayuno: "08:00",
+  "Media mañana": "11:00",
+  Almuerzo: "14:00",
+  Merienda: "17:00",
+  Cena: "20:00",
+};
