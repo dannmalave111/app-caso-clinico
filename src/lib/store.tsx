@@ -332,7 +332,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       if (raw) {
         const parsed = JSON.parse(raw) as Patient[];
         if (Array.isArray(parsed) && parsed.length) {
-          setPatients(parsed);
+          setPatients(parsed.map(normalizePatient));
           setActivePatientId(parsed[0]!.id);
           setHydrated(true);
           return;
@@ -410,9 +410,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       addMeasurement: (patientId, m) =>
         update(patientId, (p) => ({
           ...p,
-          medidas: [...p.medidas, m].sort((a, b) => a.fecha.localeCompare(b.fecha)),
+          medidas: [...p.medidas.filter((x) => x.fecha !== m.fecha), m].sort((a, b) =>
+            a.fecha.localeCompare(b.fecha),
+          ),
         })),
+      removeMeasurement: (patientId, fecha) =>
+        update(patientId, (p) => ({ ...p, medidas: p.medidas.filter((m) => m.fecha !== fecha) })),
       setMetaAgua: (patientId, meta) => update(patientId, (p) => ({ ...p, metaAgua: meta })),
+      updatePatient: (patientId, patch) => update(patientId, (p) => ({ ...p, ...patch })),
+      addActividad: (patientId, a) =>
+        update(patientId, (p) => ({
+          ...p,
+          actividades: [{ ...a, id: uid("act") }, ...p.actividades],
+        })),
+      removeActividad: (patientId, id) =>
+        update(patientId, (p) => ({
+          ...p,
+          actividades: p.actividades.filter((a) => a.id !== id),
+        })),
+
       ensurePatient: (info, activar = true) => {
         setPatients((prev) =>
           prev.some((p) => p.id === info.id)
