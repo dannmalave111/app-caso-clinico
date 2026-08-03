@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import { Copy, KeyRound, Trash2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import { useServerFn } from "@tanstack/react-start";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
-import { deletePatient, registerPatient } from "@/lib/patients.functions";
+import { deletePatient, loadMyPatients, registerPatient } from "@/lib/patients.functions";
 import { registroSchema } from "@/lib/patients.shared";
 import { useStore } from "@/lib/store";
 
@@ -23,16 +23,23 @@ const vacio = { nombre: "", edad: "", telefono: "", objetivo: "" };
 
 export function RegistroPacientes() {
   const { ensurePatient } = useStore();
+  const loadPatientsFn = useServerFn(loadMyPatients);
   const [filas, setFilas] = useState<Fila[]>([]);
   const [form, setForm] = useState(vacio);
   const [cargando, setCargando] = useState(false);
 
   const cargar = async () => {
-    const { data } = await supabase
-      .from("patients")
-      .select("id, nombre, edad, telefono, objetivo, codigo")
-      .order("created_at", { ascending: false });
-    setFilas((data as Fila[]) ?? []);
+    const rows = await loadPatientsFn({});
+    setFilas(
+      (rows as Record<string, unknown>[]).map((r) => ({
+        id: r["id"] as string,
+        nombre: r["nombre"] as string,
+        edad: r["edad"] as number,
+        telefono: r["telefono"] as string,
+        objetivo: r["objetivo"] as string,
+        codigo: r["codigo"] as string,
+      })),
+    );
   };
 
   useEffect(() => {
