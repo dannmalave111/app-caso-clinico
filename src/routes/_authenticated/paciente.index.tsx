@@ -9,7 +9,10 @@ import {
   NotebookPen,
 } from "lucide-react";
 import { PatientShell } from "@/components/PatientShell";
-import { BRISTOL, MEAL_ORDER, isoDate, useStore } from "@/lib/store";
+import { EscalaBristol, EscalaOrina } from "@/components/paciente/EscalasVisuales";
+import { Recordatorios } from "@/components/paciente/Recordatorios";
+import { MEAL_ORDER, isoDate, useStore } from "@/lib/store";
+
 
 export const Route = createFileRoute("/_authenticated/paciente/")({
   head: () => ({
@@ -63,8 +66,10 @@ function PacienteHoy() {
           Hoy tiene {bloques.length} tiempos de comida. Vamos paso a paso.
         </p>
       </header>
+      <Recordatorios fecha={fecha} />
 
       {/* Comidas */}
+
       <section aria-labelledby="titulo-comidas" className="space-y-4">
         <h2 id="titulo-comidas" className="text-2xl font-extrabold">
           Mi plan de comidas
@@ -201,38 +206,10 @@ function PacienteHoy() {
         <h2 id="titulo-registro" className="text-2xl font-extrabold">
           Mi registro del día
         </h2>
-        <div className="card-float mt-4 p-6">
-          <p className="text-xl text-muted-foreground">
-            ¿Cómo estuvo su digestión hoy? Toque un número.
-          </p>
-          <div className="mt-4 grid grid-cols-4 gap-3 sm:grid-cols-7">
-            {BRISTOL.map((b) => {
-              const sel = log.bristol === b.n;
-              return (
-                <button
-                  key={b.n}
-                  type="button"
-                  onClick={() => updateLog(activePatient.id, fecha, { bristol: b.n })}
-                  aria-pressed={sel}
-                  aria-label={`Tipo ${b.n}: ${b.label}`}
-                  title={`${b.label} — ${b.desc}`}
-                  className={`tap-target flex flex-col items-center justify-center rounded-2xl border-2 text-2xl font-extrabold transition-colors ${
-                    sel
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-card text-foreground hover:bg-muted"
-                  }`}
-                >
-                  {b.n}
-                </button>
-              );
-            })}
-          </div>
-          {log.bristol && (
-            <p className="mt-3 text-lg font-semibold text-muted-foreground">
-              Tipo {log.bristol}: {BRISTOL[log.bristol - 1]?.label} (
-              {BRISTOL[log.bristol - 1]?.desc})
-            </p>
-          )}
+        <div className="card-float mt-4 space-y-6 p-6">
+          <EscalaBristol fecha={fecha} />
+          <EscalaOrina fecha={fecha} />
+
 
           <label htmlFor="nota" className="mt-6 block text-xl font-bold">
             <span className="inline-flex items-center gap-2">
