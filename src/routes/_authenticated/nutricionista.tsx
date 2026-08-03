@@ -126,7 +126,7 @@ function Dashboard() {
       </header>
 
       <main className="mx-auto w-full max-w-7xl px-6 py-8 pb-24 sm:pb-8">
-        {noPacientes ? (
+        {noPacientes && tab !== "registro" ? (
           <div className="card-float p-10 text-center">
             <UserPlus className="mx-auto size-12 text-muted-foreground" aria-hidden="true" />
             <h2 className="mt-4 text-2xl font-extrabold">No hay pacientes registrados</h2>
