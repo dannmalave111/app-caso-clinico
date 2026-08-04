@@ -284,9 +284,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [syncPatientDataFn],
   );
 
-  // Load localStorage first, then try Supabase
+  // Load from Supabase first (single source of truth), fallback to localStorage only if offline
   useEffect(() => {
     let cancelled = false;
+
     const loadLocal = () => {
       try {
         const raw = localStorage.getItem(STORAGE_KEY);
@@ -300,9 +301,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       } catch { /* ignore */ }
     };
 
-    loadLocal();
-
-    // Then try to refresh from Supabase (nutritionist flow)
+    // Nutritionist flow
     loadPatientsFn({})
       .then((rows) => {
         if (cancelled || !rows || rows.length === 0) return;
@@ -312,7 +311,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setActivePatientId(dbPatients[0]!.id);
       })
       .catch(() => {
-        // Not a nutritionist or not authenticated — try patient record
+        // Not a nutritionist — try patient record
         loadPatientRecordFn({})
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           .then((row: Record<string, any> | null) => {
@@ -321,7 +320,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
             setPatients([p]);
             setActivePatientId(p.id);
           })
-          .catch(() => { /* use localStorage fallback */ });
+          .catch(() => {
+            // Offline or not authenticated — fallback to localStorage
+            if (!cancelled) loadLocal();
+          });
       })
       .finally(() => {
         if (!cancelled) setHydrated(true);
