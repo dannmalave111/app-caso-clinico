@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { CalendarHeart, LineChart, LogOut } from "lucide-react";
 import type { ReactNode } from "react";
+import { cerrarSesion } from "@/lib/auth";
 
 export function PatientShell({ children }: { children: ReactNode }) {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -9,6 +10,11 @@ export function PatientShell({ children }: { children: ReactNode }) {
     { to: "/paciente", label: "Hoy", icon: CalendarHeart },
     { to: "/paciente/progreso", label: "Progreso", icon: LineChart },
   ] as const;
+
+  const salir = async () => {
+    await cerrarSesion();
+    window.location.href = "/";
+  };
 
   return (
     <div className="min-h-dvh bg-background pb-32">
@@ -36,14 +42,15 @@ export function PatientShell({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
-          <Link
-            to="/"
-            aria-label="Cambiar de perfil"
+          <button
+            type="button"
+            onClick={salir}
+            aria-label="Cerrar sesión"
             className="tap-target flex flex-col items-center justify-center gap-1 rounded-2xl px-4 text-lg font-bold text-muted-foreground hover:bg-muted"
           >
             <LogOut className="size-7" aria-hidden="true" />
             Salir
-          </Link>
+          </button>
         </div>
       </nav>
     </div>

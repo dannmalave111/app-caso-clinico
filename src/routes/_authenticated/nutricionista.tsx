@@ -4,6 +4,7 @@ import {
   Activity,
   ArrowLeft,
   ClipboardList,
+  LogOut,
   MessageCircle,
   Plus,
   Ruler,
@@ -13,6 +14,7 @@ import {
   UtensilsCrossed,
   History,
 } from "lucide-react";
+import { cerrarSesion } from "@/lib/auth";
 import {
   BRISTOL,
   MEAL_ORDER,
@@ -91,19 +93,32 @@ function Dashboard() {
               </p>
             </div>
           </div>
-          <select
-            aria-label="Paciente seleccionado"
-            value={activePatient?.id ?? ""}
-            onChange={(e) => setActivePatientId(e.target.value)}
-            className="h-11 rounded-xl border border-border bg-card px-3 text-base font-semibold"
-            disabled={noPacientes}
-          >
-            {patients.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.nombre}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-3">
+            <select
+              aria-label="Paciente seleccionado"
+              value={activePatient?.id ?? ""}
+              onChange={(e) => setActivePatientId(e.target.value)}
+              className="h-11 rounded-xl border border-border bg-card px-3 text-base font-semibold"
+              disabled={noPacientes}
+            >
+              {patients.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nombre}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={async () => {
+                await cerrarSesion();
+                window.location.href = "/";
+              }}
+              aria-label="Cerrar sesión"
+              className="flex size-11 items-center justify-center rounded-xl bg-muted text-muted-foreground hover:bg-secondary"
+            >
+              <LogOut className="size-5" aria-hidden="true" />
+            </button>
+          </div>
         </div>
         <nav className="mx-auto flex w-full max-w-7xl gap-1 overflow-x-auto px-6">
           {tabs.map((t) => (
