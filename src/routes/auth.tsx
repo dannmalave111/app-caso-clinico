@@ -36,6 +36,7 @@ function AuthPage() {
   const [modo, setModo] = useState<"entrar" | "crear">("entrar");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [registroToken, setRegistroToken] = useState("");
   const [cargando, setCargando] = useState(false);
 
   useEffect(() => {
@@ -67,7 +68,7 @@ function AuthPage() {
 
         // Intento 1: registro via server (admin API — no requiere verificación)
         try {
-          await registerNutricionista({ data: { email: email.trim(), password } });
+          await registerNutricionista({ data: { email: email.trim(), password, token: registroToken.trim() || undefined } });
           registroExitoso = true;
         } catch {
           // Intento 2: fallback con signUp estándar del cliente
@@ -197,6 +198,22 @@ function AuthPage() {
                 className="tap-target rounded-2xl text-lg"
               />
             </div>
+
+            {modo === "crear" && (
+              <div className="space-y-2">
+                <Label htmlFor="token" className="text-lg font-bold">
+                  Código de invitación (si aplica)
+                </Label>
+                <Input
+                  id="token"
+                  type="text"
+                  value={registroToken}
+                  onChange={(e) => setRegistroToken(e.target.value)}
+                  className="tap-target rounded-2xl text-lg"
+                  placeholder="Solo si el administrador lo proporcionó"
+                />
+              </div>
+            )}
 
             <Button
               type="submit"

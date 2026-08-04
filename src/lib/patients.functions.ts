@@ -242,10 +242,15 @@ export const registerNutricionista = createServerFn({ method: "POST" })
       .object({
         email: z.string().email(),
         password: z.string().min(6),
+        token: z.string().optional(),
       })
       .parse(input)
   )
   .handler(async ({ data }) => {
+    const registroToken = process.env["NUTRICIONISTA_REGISTRO_TOKEN"];
+    if (registroToken && data.token !== registroToken) {
+      throw new Error("Token de registro inválido. Solo un administrador puede crear cuentas de nutricionista.");
+    }
     try {
       const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
