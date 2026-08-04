@@ -35,6 +35,17 @@ export const Route = createFileRoute("/_authenticated/paciente/")({
 
 function PacienteHoy() {
   const { activePatient, getLog, toggleMeal, updateLog } = useStore();
+
+  if (!activePatient) {
+    return (
+      <PatientShell>
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <p className="text-lg text-muted-foreground">Cargando su plan...</p>
+        </div>
+      </PatientShell>
+    );
+  }
+
   const hoy = new Date();
   const fecha = isoDate(hoy);
   const log = getLog(activePatient.id, fecha);

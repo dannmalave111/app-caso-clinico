@@ -37,6 +37,16 @@ export const Route = createFileRoute("/_authenticated/paciente/progreso")({
 function Progreso() {
   const { activePatient, getLog, addActividad, removeActividad } = useStore();
 
+  if (!activePatient) {
+    return (
+      <PatientShell>
+        <div className="flex min-h-[50vh] items-center justify-center">
+          <p className="text-lg text-muted-foreground">Cargando su progreso...</p>
+        </div>
+      </PatientShell>
+    );
+  }
+
   const [tipoAct, setTipoAct] = useState("");
   const [minutosAct, setMinutosAct] = useState(0);
   const [intensidadAct, setIntensidadAct] = useState<"Baja" | "Media" | "Alta">("Baja");
