@@ -63,4 +63,7 @@ export function useSession() {
 
 export async function cerrarSesion() {
   await supabase.auth.signOut();
+  try {
+    localStorage.removeItem("nutriplan-store-v1");
+  } catch { /* ignore */ }
 }

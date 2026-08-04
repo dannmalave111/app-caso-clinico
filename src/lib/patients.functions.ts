@@ -46,8 +46,20 @@ export const syncPatientData = createServerFn({ method: "POST" })
       actividades: z.array(z.any()),
     }).parse(input)
   )
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Verify ownership: patient must belong to this user (as patient or creator)
+    const { data: patient } = await supabaseAdmin
+      .from("patients")
+      .select("user_id,created_by")
+      .eq("id", data.id)
+      .maybeSingle();
+
+    if (!patient || (patient.user_id !== context.userId && patient.created_by !== context.userId)) {
+      throw new Error("Unauthorized: cannot modify this patient record");
+    }
+
     const { error } = await supabaseAdmin
       .from("patients")
       .update({
@@ -154,7 +166,11 @@ export const deletePatient = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .maybeSingle();
 
-    const { error } = await supabaseAdmin.from("patients").delete().eq("id", data.id);
+    const { error } = await supabaseAdmin
+      .from("patients")
+      .delete()
+      .eq("id", data.id)
+      .eq("created_by", context.userId);
     if (error) throw new Error(error.message);
 
     if (patient?.user_id) {
@@ -212,7 +228,8 @@ export const updatePatientClinico = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin
       .from("patients")
       .update(updatePayload)
-      .eq("id", data.id);
+      .eq("id", data.id)
+      .eq("created_by", context.userId);
 
     if (error) throw new Error(error.message);
     return { ok: true };
