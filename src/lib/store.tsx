@@ -301,33 +301,39 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       } catch { /* ignore */ }
     };
 
-    // Nutritionist flow
-    loadPatientsFn({})
-      .then((rows) => {
-        if (cancelled || !rows || rows.length === 0) return;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const dbPatients = (rows as Record<string, any>[]).map(dbRowToPatient);
-        setPatients(dbPatients);
-        setActivePatientId(dbPatients[0]!.id);
-      })
-      .catch(() => {
-        // Not a nutritionist — try patient record
-        loadPatientRecordFn({})
+    const loadFromSupabase = async () => {
+      try {
+        // 1. Try nutritionist flow (patients created by this user)
+        const rows = await loadPatientsFn({});
+        if (!cancelled && rows && rows.length > 0) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          .then((row: Record<string, any> | null) => {
-            if (cancelled || !row) return;
-            const p = dbRowToPatient(row);
-            setPatients([p]);
-            setActivePatientId(p.id);
-          })
-          .catch(() => {
-            // Offline or not authenticated — fallback to localStorage
-            if (!cancelled) loadLocal();
-          });
-      })
-      .finally(() => {
+          const dbPatients = (rows as Record<string, any>[]).map(dbRowToPatient);
+          setPatients(dbPatients);
+          setActivePatientId(dbPatients[0]!.id);
+          return;
+        }
+
+        // 2. If no nutritionist patients, try patient flow (own record)
+        const row = await loadPatientRecordFn({});
+        if (!cancelled && row) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const p = dbRowToPatient(row as Record<string, any>);
+          setPatients([p]);
+          setActivePatientId(p.id);
+          return;
+        }
+
+        // 3. Nothing from Supabase — fallback to localStorage
+        if (!cancelled) loadLocal();
+      } catch {
+        // Offline or not authenticated — fallback to localStorage
+        if (!cancelled) loadLocal();
+      } finally {
         if (!cancelled) setHydrated(true);
-      });
+      }
+    };
+
+    loadFromSupabase();
 
     return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
